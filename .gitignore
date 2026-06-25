@@ -4,3 +4,7 @@ dist-ssr
 .DS_Store
 *.local
 .netlify
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+*.tsbuildinfo
