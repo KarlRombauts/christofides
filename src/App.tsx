@@ -61,6 +61,7 @@ export default function App() {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Backspace' && hoveredId.current !== null) {
+        e.preventDefault(); // stop Backspace from triggering browser back-navigation
         deleteVertex(hoveredId.current);
         hoveredId.current = null;
         setOptimal(null);
