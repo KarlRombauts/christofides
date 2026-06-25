@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { Edge } from '../../algorithm/graph';
 import { createNeighboursIndex } from '../../algorithm/utils';
 

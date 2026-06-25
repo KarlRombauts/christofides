@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { compareEdges, Edge } from '../../algorithm/graph';
 
 describe('Edge Comparison', () => {
