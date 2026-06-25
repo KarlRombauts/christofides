@@ -1,26 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { StepDef } from '../model/steps';
-
-// ─── Design tokens (Graph Paper Noir) ────────────────────────────────────────
-const T = {
-  bg:          '#08111a',
-  panel:       '#0c1824',
-  panelBorder: '#0d2030',
-  panelDeep:   '#071016',
-  cyan:        '#00e5ff',
-  cyanDim:     '#00b8cc',
-  cyanFaint:   'rgba(0,229,255,0.07)',
-  cyanGlow:    'rgba(0,229,255,0.22)',
-  amber:       '#ffb347',
-  amberDim:    'rgba(255,179,71,0.18)',
-  muted:       '#2a4460',
-  label:       '#4a7fa5',
-  labelBright: '#7ab8d4',
-  text:        '#c8dce8',
-  textFaint:   '#3d6080',
-  white:       '#e8f4f8',
-  mono:        '"JetBrains Mono", "Fira Code", "Courier New", monospace',
-};
+import { T } from '../theme';
 
 export interface StepPanelProps {
   step: StepDef;
@@ -376,41 +356,39 @@ export function StepPanel({
         )}
       </div>
 
-      {/* ── Controls row (toggle + compare) ─────────────────── */}
-      {(showShortcut || true) && (
-        <>
-          <ScanLine />
+      {/* ── Controls row (toggle + compare) — always visible ── */}
+      <>
+        <ScanLine />
+        <div style={{
+          display:    'flex',
+          flexWrap:   'wrap',
+          alignItems: 'center',
+          gap:        '16px',
+          padding:    '10px 14px',
+        }}>
+          {/* Shortcut toggle — dimmed but visible on non-shortcut steps */}
           <div style={{
-            display:    'flex',
-            flexWrap:   'wrap',
-            alignItems: 'center',
-            gap:        '16px',
-            padding:    '10px 14px',
+            opacity:    showShortcut ? 1 : 0.28,
+            transition: 'opacity 0.3s ease',
+            pointerEvents: showShortcut ? 'auto' : 'none',
           }}>
-            {/* Shortcut toggle — only meaningful on steps 6–7 */}
-            <div style={{
-              opacity:    showShortcut ? 1 : 0.28,
-              transition: 'opacity 0.3s ease',
-              pointerEvents: showShortcut ? 'auto' : 'none',
-            }}>
-              <ShortcutToggle
-                value={useImprovedShortcut}
-                onChange={onToggleShortcut}
-              />
-            </div>
-
-            {/* Spacer */}
-            <div style={{ flex: 1 }} />
-
-            {/* Compare to optimal button */}
-            <CompareButton
-              onClick={onCompareOptimal}
-              enabled={canCompareOptimal}
-              hasResult={optimal !== null}
+            <ShortcutToggle
+              value={useImprovedShortcut}
+              onChange={onToggleShortcut}
             />
           </div>
-        </>
-      )}
+
+          {/* Spacer */}
+          <div style={{ flex: 1 }} />
+
+          {/* Compare to optimal button */}
+          <CompareButton
+            onClick={onCompareOptimal}
+            enabled={canCompareOptimal}
+            hasResult={optimal !== null}
+          />
+        </div>
+      </>
     </div>
   );
 }

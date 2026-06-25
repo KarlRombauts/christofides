@@ -23,6 +23,10 @@ export interface GraphCanvasProps {
   onVertexPointerDown?: (id: Vertex, e: PointerEvent<SVGCircleElement>) => void;
   onVertexPointerEnter?: (id: Vertex, e: PointerEvent<SVGCircleElement>) => void;
   onBackgroundPointerDown?: (e: PointerEvent<SVGSVGElement>) => void;
+  /** Propagated SVG-level pointer events for drag handling */
+  _onSvgPointerMove?: (e: PointerEvent<SVGSVGElement>) => void;
+  _onSvgPointerUp?: (e: PointerEvent<SVGSVGElement>) => void;
+  _onSvgPointerLeave?: (e: PointerEvent<SVGSVGElement>) => void;
 }
 
 // Design: "Graph Paper Noir"
@@ -72,6 +76,9 @@ export function GraphCanvas({
   onVertexPointerDown,
   onVertexPointerEnter,
   onBackgroundPointerDown,
+  _onSvgPointerMove,
+  _onSvgPointerUp,
+  _onSvgPointerLeave,
 }: GraphCanvasProps) {
   const uid = useId();
   const glowFilterId = `glow-${uid}`.replace(/:/g, '');
@@ -107,6 +114,9 @@ export function GraphCanvas({
         outline: '1px solid #0d2030',
       }}
       onPointerDown={onBackgroundPointerDown}
+      onPointerMove={_onSvgPointerMove}
+      onPointerUp={_onSvgPointerUp}
+      onPointerLeave={_onSvgPointerLeave}
     >
       <defs>
         {/* Blur filter for highlight edge glow */}
@@ -133,9 +143,11 @@ export function GraphCanvas({
         })}
       </g>
 
-      {/* Highlight edges — electric cyan signal layer, rendered on top */}
-      <AnimatePresence>
-        <g role="group" aria-label="highlight edges">
+      {/* Highlight edges — electric cyan signal layer, rendered on top.
+          AnimatePresence is inside the <g> so the keyed motion.g elements
+          are its DIRECT children — required for exit animations to fire. */}
+      <g role="group" aria-label="highlight edges">
+        <AnimatePresence>
           {highlightEdges.map((e) => {
             const coords = edgeCoords(e);
             if (!coords) return null;
@@ -155,8 +167,8 @@ export function GraphCanvas({
               </motion.g>
             );
           })}
-        </g>
-      </AnimatePresence>
+        </AnimatePresence>
+      </g>
 
       {/* Vertices — rendered last so they sit on top of all edges */}
       <g role="group" aria-label="vertices">

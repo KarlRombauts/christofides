@@ -1,21 +1,5 @@
-import { useRef } from 'react';
-
-// ─── Design tokens (Graph Paper Noir) ────────────────────────────────────────
-const T = {
-  bg:          '#08111a',
-  panel:       '#0c1824',
-  panelBorder: '#0d2030',
-  panelDeep:   '#071016',
-  cyan:        '#00e5ff',
-  cyanDim:     '#00b8cc',
-  cyanFaint:   'rgba(0,229,255,0.07)',
-  cyanGlow:    'rgba(0,229,255,0.22)',
-  muted:       '#2a4460',
-  label:       '#4a7fa5',
-  textFaint:   '#3d6080',
-  white:       '#e8f4f8',
-  mono:        '"JetBrains Mono", "Fira Code", "Courier New", monospace',
-};
+import React from 'react';
+import { T } from '../theme';
 
 export interface ControlsProps {
   stepIndex:     number;
@@ -132,7 +116,6 @@ function VertexSlider({
   value:    number;
   onChange: (n: number) => void;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
   const MIN = 4;
   const MAX = 12;
   const pct = ((value - MIN) / (MAX - MIN)) * 100;
@@ -174,7 +157,6 @@ function VertexSlider({
 
       {/* Track */}
       <div
-        ref={trackRef}
         style={{
           position:     'relative',
           height:       '3px',
