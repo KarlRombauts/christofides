@@ -18,10 +18,6 @@ export function segmentsCross(a: Point, b: Point, c: Point, d: Point): boolean {
   return o1 !== o2 && o3 !== o4;
 }
 
-function dist(a: Point, b: Point): number {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
 // Iterative 2-opt that only swaps when edges (i,i+1) and (j,j+1) properly cross.
 // On a Euclidean plane, uncrossing a proper crossing strictly shortens the tour.
 export function removeCrossings(
