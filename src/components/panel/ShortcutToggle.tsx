@@ -11,6 +11,9 @@ export function ShortcutToggle({
   onChange: (v: boolean) => void;
 }) {
   const current = value ? 'improved' : 'naive';
+  const description = value
+    ? 'Improved: when a vertex repeats in the circuit, choose which visit to skip so the resulting shortcut is as short as possible.'
+    : 'Naive: walk the Eulerian circuit and skip every vertex already visited, keeping its first occurrence.';
   return (
     <div className="flex flex-col gap-1.5">
       <span
@@ -32,6 +35,12 @@ export function ShortcutToggle({
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      <p
+        className="text-xs leading-relaxed"
+        style={{ color: T.textFaint, fontFamily: T.sans }}
+      >
+        {description}
+      </p>
     </div>
   );
 }
