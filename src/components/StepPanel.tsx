@@ -28,6 +28,9 @@ export interface StepPanelProps {
   canCompareOptimal:   boolean;
   /** Vertex count for step 2 odd-degree display */
   oddVertexCount?: number;
+  /** Which tour the graph is displaying (once the optimum is computed) */
+  tourView?:   'christofides' | 'optimal' | 'both';
+  onTourView?: (v: 'christofides' | 'optimal' | 'both') => void;
 }
 
 // ─── Step-specific metric label ───────────────────────────────────────────────
@@ -181,9 +184,11 @@ interface FinalSummaryProps {
   optimal:    { length: number } | null;
   onCompare:  () => void;
   canCompare: boolean;
+  tourView:   'christofides' | 'optimal' | 'both';
+  onTourView: (v: 'christofides' | 'optimal' | 'both') => void;
 }
 
-function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare }: FinalSummaryProps) {
+function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare, tourView, onTourView }: FinalSummaryProps) {
   const ratioToOptimal =
     optimal !== null && optimal.length > 0 ? tourLength / optimal.length : null;
 
@@ -222,34 +227,50 @@ function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare }:
         {' '}(optimal ≥ this)
       </p>
 
-      {/* Optimal result or compare button */}
+      {/* Optimal result + view toggle, or the compare button */}
       {optimal !== null && ratioToOptimal !== null ? (
-        <div
-          className="px-3.5 py-2.5 rounded-md text-sm leading-relaxed"
-          style={{
-            background:   T.panelDeep,
-            border:       `1px solid ${T.panelBorder}`,
-            fontFamily:   T.sans,
-            color:        T.text,
-          }}
-        >
-          {ratioToOptimal <= 1.005 ? (
-            <>
-              <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
-              {' — matched! '}
-              <span style={{ color: T.accent, fontWeight: 600 }}>1.00× optimal ✓</span>
-            </>
-          ) : (
-            <>
-              <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
-              {' — this tour is '}
-              <span style={{ color: T.accent, fontWeight: 600 }}>
-                {ratioToOptimal.toFixed(2)}× optimal
-              </span>
-              {ratioToOptimal <= 1.5 ? ' ✓ within the guarantee.' : '.'}
-            </>
-          )}
-        </div>
+        <>
+          <div
+            className="px-3.5 py-2.5 rounded-md text-sm leading-relaxed"
+            style={{
+              background:   T.panelDeep,
+              border:       `1px solid ${T.panelBorder}`,
+              fontFamily:   T.sans,
+              color:        T.text,
+            }}
+          >
+            {ratioToOptimal <= 1.005 ? (
+              <>
+                <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
+                {' — matched! '}
+                <span style={{ color: T.accent, fontWeight: 600 }}>1.00× optimal ✓</span>
+              </>
+            ) : (
+              <>
+                <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
+                {' — this tour is '}
+                <span style={{ color: T.accent, fontWeight: 600 }}>
+                  {ratioToOptimal.toFixed(2)}× optimal
+                </span>
+                {ratioToOptimal <= 1.5 ? ' ✓ within the guarantee.' : '.'}
+              </>
+            )}
+          </div>
+
+          {/* View toggle — isolate either tour, or overlay both */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm" style={{ color: T.textMuted, fontFamily: T.sans }}>
+              Show on graph
+            </span>
+            <Tabs value={tourView} onValueChange={(v) => onTourView(v as 'christofides' | 'optimal' | 'both')}>
+              <TabsList className="h-8">
+                <TabsTrigger value="christofides" className="text-sm h-6 px-3">Christofides</TabsTrigger>
+                <TabsTrigger value="optimal" className="text-sm h-6 px-3">Optimal</TabsTrigger>
+                <TabsTrigger value="both" className="text-sm h-6 px-3">Both</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </>
       ) : (
         <CompareButton onClick={onCompare} enabled={canCompare} hasResult={false} />
       )}
@@ -268,6 +289,8 @@ export function StepPanel({
   onCompareOptimal,
   canCompareOptimal,
   oddVertexCount = 0,
+  tourView = 'both',
+  onTourView = () => {},
 }: StepPanelProps) {
   const isFinalStep  = step.id === 6 || step.id === 7;
   // Shortcut toggle only matters on the shortcutting steps (6–7).
@@ -355,6 +378,8 @@ export function StepPanel({
                   optimal={optimal}
                   onCompare={onCompareOptimal}
                   canCompare={canCompareOptimal}
+                  tourView={tourView}
+                  onTourView={onTourView}
                 />
               ) : (
                 <CurrentMetric

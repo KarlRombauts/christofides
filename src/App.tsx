@@ -39,6 +39,8 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const [vertexCount, setVertexCount] = useState(DEFAULT_VERTEX_COUNT);
   const [optimal, setOptimal] = useState<{ length: number; tour: number[] } | null>(null);
+  // Which tour to display once the optimum has been computed.
+  const [tourView, setTourView] = useState<'christofides' | 'optimal' | 'both'>('both');
 
   // ── Graph interaction ────────────────────────────────────────────────────────
   const { verts, addVertex, moveVertex, deleteVertex, reset } =
@@ -202,24 +204,31 @@ export default function App() {
   const onCompareOptimal = useCallback(() => {
     if (!canCompareOptimal) return;
     const res = bruteForceOptimal(verts, graph);
-    if (res) setOptimal({ length: res.length, tour: res.tour });
+    if (res) {
+      setOptimal({ length: res.length, tour: res.tour });
+      setTourView('both');
+    }
   }, [verts, graph, canCompareOptimal]);
 
   // ── Canvas props ──────────────────────────────────────────────────────────────
   // Step 0 shows the complete graph itself: render its edges as the muted base
   // layer (no accent), keeping nodes prominent — accenting every edge just makes
   // the complete graph an unreadable mess. Later steps accent their result edges.
-  const highlightEdges = stepIndex === 0 ? [] : result.edges;
   const highlightVertices = result.vertices;
   const pulseVertices = stepIndex === 2 ? result.vertices : [];
   // For step 2: pass the count of odd-degree vertices
   const oddVertexCount = stepIndex === 2 ? result.vertices.length : 0;
 
-  // Optimal-tour overlay: only on the final tour steps, once the exact optimum
-  // has been computed, so it can be compared against the Christofides tour.
+  // Tour display: on the final steps, once the optimum is computed, the view
+  // toggle decides whether we show the Christofides tour, the optimal, or both.
   const isFinalStep = stepIndex === 6 || stepIndex === 7;
-  const compareEdges =
-    optimal && isFinalStep ? pathToEdges(graph.edges, optimal.tour) : [];
+  const showingOptimal = !!optimal && isFinalStep;
+  let highlightEdges = stepIndex === 0 ? [] : result.edges;
+  let compareEdges: typeof result.edges = [];
+  if (showingOptimal) {
+    if (tourView === 'optimal') highlightEdges = []; // hide the Christofides tour
+    if (tourView !== 'christofides') compareEdges = pathToEdges(graph.edges, optimal!.tour);
+  }
 
   // ─── Responsive breakpoint ────────────────────────────────────────────────────
   const [isWide, setIsWide] = useState(() =>
@@ -340,6 +349,8 @@ export default function App() {
             onCompareOptimal={onCompareOptimal}
             canCompareOptimal={canCompareOptimal}
             oddVertexCount={oddVertexCount}
+            tourView={tourView}
+            onTourView={setTourView}
           />
         </div>
       </div>

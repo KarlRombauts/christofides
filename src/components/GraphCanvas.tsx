@@ -103,6 +103,9 @@ export function GraphCanvas({
     });
   }, [compareEdges, posMap]);
   const showCompare = compareEdgeData.length > 0;
+  // Dash the optimal overlay only when the Christofides tour is shown too (to
+  // disambiguate overlapping segments); show it solid when it's on its own.
+  const compareDash = highlightEdges.length > 0 ? '6 5' : undefined;
 
   // Precompute all data needed to render base edges — coords + weight resolved once per edge.
   // Deps: pureBaseEdges (changes when baseEdges/highlightKeys change), posMap (changes on drag),
@@ -202,7 +205,7 @@ export function GraphCanvas({
               x1={x1} y1={y1} x2={x2} y2={y2}
               stroke={T.optimal}
               strokeWidth={2.5}
-              strokeDasharray="6 5"
+              strokeDasharray={compareDash}
               strokeLinecap="round"
               style={{ pointerEvents: 'none' }}
             />
@@ -227,15 +230,22 @@ export function GraphCanvas({
         ))}
       </g>
 
-      {/* Legend (only when overlaying the optimal tour) — bottom-left */}
+      {/* Legend — shows a row per visible tour (bottom-left) */}
       {showCompare && (
-        <g transform={`translate(14, ${height - 40})`} style={{ pointerEvents: 'none' }}>
-          <line x1={0} y1={4} x2={22} y2={4} stroke={T.edgeHighlight} strokeWidth={2.5} strokeLinecap="round" />
-          <text x={28} y={8} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
-            Christofides
-          </text>
-          <line x1={0} y1={22} x2={22} y2={22} stroke={T.optimal} strokeWidth={2.5} strokeDasharray="6 5" strokeLinecap="round" />
-          <text x={28} y={26} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
+        <g transform={`translate(14, ${height - (highlightEdges.length > 0 ? 40 : 22)})`} style={{ pointerEvents: 'none' }}>
+          {highlightEdges.length > 0 && (
+            <>
+              <line x1={0} y1={4} x2={22} y2={4} stroke={T.edgeHighlight} strokeWidth={2.5} strokeLinecap="round" />
+              <text x={28} y={8} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
+                Christofides
+              </text>
+            </>
+          )}
+          <line
+            x1={0} y1={highlightEdges.length > 0 ? 22 : 4} x2={22} y2={highlightEdges.length > 0 ? 22 : 4}
+            stroke={T.optimal} strokeWidth={2.5} strokeDasharray={compareDash} strokeLinecap="round"
+          />
+          <text x={28} y={highlightEdges.length > 0 ? 26 : 8} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
             Optimal
           </text>
         </g>
