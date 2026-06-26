@@ -15,7 +15,7 @@ export interface ControlsProps {
 }
 
 const MIN_VERTS = 4;
-const MAX_VERTS = 12;
+const MAX_VERTS = 40;
 
 // ─── Base button component ────────────────────────────────────────────────────
 
