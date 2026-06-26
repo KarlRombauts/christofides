@@ -57,7 +57,7 @@ export const STEPS: StepDef[] = [
     id: 0,
     title: "Complete weighted graph",
     explanation:
-      "The Travelling Salesman Problem is a classic computer science question that asks what the shortest possible path you can take to visit every city once and return home. Naively checking every possible loop takes O(n!) time which scales terribly.",
+      'The Travelling Salesman Problem is a classic computer science question that asks what the shortest possible path you can take to visit every city once and return home. Naively checking every possible loop takes O(n!) time which scales terribly. Christofide\'s algorithm finds a "pretty good" path in polynomial time. Christofide\'s is an 1.5 approximation algorithm, meaning that our "pretty good" path is at most 1.5 times longer than the optimal solution',
     compute: (g) => asResult(g),
   },
   {
