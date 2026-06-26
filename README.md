@@ -2,7 +2,7 @@
 
 An interactive, step-by-step visual explainer of Christofides' algorithm for the Travelling Salesman Problem, guaranteed to find a tour within **1.5× of optimal** for metric TSP instances.
 
-**Live demo:** _(GitHub Pages — see Deploy below; paste URL after first deploy)_
+**Live demo:** https://karlrombauts.github.io/christofides/
 
 ![Christofides Explainer](docs/screenshots/step0-complete-graph.png)
 

@@ -95,7 +95,7 @@ export const STEPS: StepDef[] = [
     id: 5,
     title: "Union: tree + matching",
     explanation:
-      "Combine the spanning tree with the matching. Now every vertex has even degree, so an Eulerian circuit (one that uses every edge) exists.",
+      "Next we combine the spanning tree with the matching. Now that every vertex has even degree, we know that an Eulerian circuit (one that uses every edge) exists.",
     compute: (g) => asResult(christofidesSteps[5](g)),
   },
   {
