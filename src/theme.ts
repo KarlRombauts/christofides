@@ -18,6 +18,7 @@ export const T = {
   edgeBase:    '#C8BFB4',          // base/complete-graph edges: light warm gray — recede
   edgeFaded:   '#DDD8D2',          // base edges when highlight is active — fade further
   edgeHighlight: '#C0392B',        // highlighted MST/tour edges — same brightness as nodes
+  optimal:       '#1F7A6B',        // exact optimal tour overlay (teal) — distinct from the terracotta tour
   nodeDefault: '#3D3530',          // node fill — darkest element (most prominent)
   nodeActive:  '#C0392B',          // active/highlighted node fill
   nodeStroke:  '#8A7F78',          // default node stroke

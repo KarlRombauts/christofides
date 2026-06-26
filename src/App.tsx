@@ -7,6 +7,7 @@ import { useChristofides } from './hooks/useChristofides';
 import { circularLayout, randomLayout } from './lib/layout';
 import { STEPS } from './model/steps';
 import { bruteForceOptimal } from './model/metrics';
+import { pathToEdges } from './algorithm/helper/path';
 import { T } from './theme';
 
 // ─── Canvas dimensions (fixed) ───────────────────────────────────────────────
@@ -37,7 +38,7 @@ export default function App() {
   const [useImprovedShortcut, setUseImprovedShortcut] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [vertexCount, setVertexCount] = useState(DEFAULT_VERTEX_COUNT);
-  const [optimal, setOptimal] = useState<{ length: number } | null>(null);
+  const [optimal, setOptimal] = useState<{ length: number; tour: number[] } | null>(null);
 
   // ── Graph interaction ────────────────────────────────────────────────────────
   const { verts, addVertex, moveVertex, deleteVertex, reset } =
@@ -77,6 +78,7 @@ export default function App() {
       e.stopPropagation();
       draggingId.current = id;
       setIsDragging(true);
+      setOptimal(null); // geometry is about to change — stored optimum is stale
       (e.currentTarget as SVGCircleElement).setPointerCapture(e.pointerId);
     },
     [],
@@ -200,7 +202,7 @@ export default function App() {
   const onCompareOptimal = useCallback(() => {
     if (!canCompareOptimal) return;
     const res = bruteForceOptimal(verts, graph);
-    if (res) setOptimal({ length: res.length });
+    if (res) setOptimal({ length: res.length, tour: res.tour });
   }, [verts, graph, canCompareOptimal]);
 
   // ── Canvas props ──────────────────────────────────────────────────────────────
@@ -212,6 +214,12 @@ export default function App() {
   const pulseVertices = stepIndex === 2 ? result.vertices : [];
   // For step 2: pass the count of odd-degree vertices
   const oddVertexCount = stepIndex === 2 ? result.vertices.length : 0;
+
+  // Optimal-tour overlay: only on the final tour steps, once the exact optimum
+  // has been computed, so it can be compared against the Christofides tour.
+  const isFinalStep = stepIndex === 6 || stepIndex === 7;
+  const compareEdges =
+    optimal && isFinalStep ? pathToEdges(graph.edges, optimal.tour) : [];
 
   // ─── Responsive breakpoint ────────────────────────────────────────────────────
   const [isWide, setIsWide] = useState(() =>
@@ -294,6 +302,7 @@ export default function App() {
             verts={verts}
             baseEdges={graph.edges}
             highlightEdges={highlightEdges}
+            compareEdges={compareEdges}
             highlightVertices={highlightVertices}
             pulseVertices={pulseVertices}
             width={CANVAS_W}

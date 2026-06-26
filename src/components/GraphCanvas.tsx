@@ -13,6 +13,8 @@ export interface GraphCanvasProps {
   baseEdges: AlgoEdge[];
   /** Subset to highlight (accent color, on top of base edges) */
   highlightEdges: AlgoEdge[];
+  /** Optional exact-optimal tour to overlay for comparison (dashed, teal) */
+  compareEdges?: AlgoEdge[];
   /** Vertex ids that are "active" (highlighted fill) */
   highlightVertices: Vertex[];
   /** Vertex ids that show the pulse animation (odd-degree vertices, step 2) */
@@ -40,6 +42,7 @@ export function GraphCanvas({
   verts,
   baseEdges,
   highlightEdges,
+  compareEdges = [],
   highlightVertices,
   pulseVertices = [],
   width = 600,
@@ -89,6 +92,17 @@ export function GraphCanvas({
   // Hovered edge's weight tooltip — rendered on a top-most layer so no edge
   // or node ever paints over it.
   const [hoverTip, setHoverTip] = useState<EdgeHoverInfo | null>(null);
+
+  // Optimal-tour overlay coordinates (resolved once per change).
+  const compareEdgeData = useMemo(() => {
+    return compareEdges.flatMap((e) => {
+      const a = posMap.get(e.v);
+      const b = posMap.get(e.u);
+      if (!a || !b) return [];
+      return [{ key: `opt-${edgeKey(e)}`, x1: a.x, y1: a.y, x2: b.x, y2: b.y }];
+    });
+  }, [compareEdges, posMap]);
+  const showCompare = compareEdgeData.length > 0;
 
   // Precompute all data needed to render base edges — coords + weight resolved once per edge.
   // Deps: pureBaseEdges (changes when baseEdges/highlightKeys change), posMap (changes on drag),
@@ -178,6 +192,24 @@ export function GraphCanvas({
         </AnimatePresence>
       </g>
 
+      {/* Optimal-tour overlay — dashed teal, above the Christofides tour so the
+          two can be compared, but below the nodes. */}
+      {showCompare && (
+        <g role="group" aria-label="optimal tour">
+          {compareEdgeData.map(({ key, x1, y1, x2, y2 }) => (
+            <line
+              key={key}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke={T.optimal}
+              strokeWidth={2.5}
+              strokeDasharray="6 5"
+              strokeLinecap="round"
+              style={{ pointerEvents: 'none' }}
+            />
+          ))}
+        </g>
+      )}
+
       {/* Vertices — rendered last, sit on top of all edges.
           Nodes are the brightest / most prominent layer. */}
       <g role="group" aria-label="vertices">
@@ -194,6 +226,20 @@ export function GraphCanvas({
           />
         ))}
       </g>
+
+      {/* Legend (only when overlaying the optimal tour) — bottom-left */}
+      {showCompare && (
+        <g transform={`translate(14, ${height - 40})`} style={{ pointerEvents: 'none' }}>
+          <line x1={0} y1={4} x2={22} y2={4} stroke={T.edgeHighlight} strokeWidth={2.5} strokeLinecap="round" />
+          <text x={28} y={8} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
+            Christofides
+          </text>
+          <line x1={0} y1={22} x2={22} y2={22} stroke={T.optimal} strokeWidth={2.5} strokeDasharray="6 5" strokeLinecap="round" />
+          <text x={28} y={26} style={{ fontSize: '11px', fontFamily: T.sans, fill: T.textMuted }}>
+            Optimal
+          </text>
+        </g>
+      )}
 
       {/* Hovered edge weight — drawn last so it sits above every edge and node */}
       {!dragging && hoverTip && <EdgeWeightTooltip {...hoverTip} />}
