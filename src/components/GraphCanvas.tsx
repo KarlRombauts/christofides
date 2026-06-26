@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { PointerEvent, useMemo } from 'react';
+import { PointerEvent, useMemo, useState } from 'react';
 import { Edge as AlgoEdge, Vertex } from '../algorithm/graph';
 import { PositionedVertex } from '../model/graphModel';
-import { Edge } from './Edge';
+import { Edge, EdgeHoverInfo, EdgeWeightTooltip } from './Edge';
 import { Vertex as VertexComp } from './Vertex';
 import { T } from '../theme';
 
@@ -86,6 +86,10 @@ export function GraphCanvas({
   // Are there any highlighted edges active in this scene?
   const hasHighlights = highlightEdges.length > 0;
 
+  // Hovered edge's weight tooltip — rendered on a top-most layer so no edge
+  // or node ever paints over it.
+  const [hoverTip, setHoverTip] = useState<EdgeHoverInfo | null>(null);
+
   // Precompute all data needed to render base edges — coords + weight resolved once per edge.
   // Deps: pureBaseEdges (changes when baseEdges/highlightKeys change), posMap (changes on drag),
   // weightMap (changes when baseEdges change), hasHighlights (controls dimmed flag).
@@ -141,6 +145,7 @@ export function GraphCanvas({
             weight={weight}
             dimmed={hasHighlights}
             dragging={dragging}
+            onHover={setHoverTip}
           />
         ))}
       </g>
@@ -166,6 +171,7 @@ export function GraphCanvas({
                 highlight={true}
                 weight={weight}
                 dragging={dragging}
+                onHover={setHoverTip}
               />
             </motion.g>
           ))}
@@ -188,6 +194,9 @@ export function GraphCanvas({
           />
         ))}
       </g>
+
+      {/* Hovered edge weight — drawn last so it sits above every edge and node */}
+      {!dragging && hoverTip && <EdgeWeightTooltip {...hoverTip} />}
     </svg>
   );
 }
