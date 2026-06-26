@@ -57,7 +57,7 @@ export const STEPS: StepDef[] = [
     id: 0,
     title: "Complete weighted graph",
     explanation:
-      'The Travelling Salesman Problem is a classic computer science question that asks what the shortest possible path you can take to visit every city once and return home. Naively checking every possible loop takes O(n!) time which scales terribly. Christofide\'s algorithm finds a "pretty good" path in polynomial time. Christofide\'s is an 1.5 approximation algorithm, meaning that our "pretty good" path is at most 1.5 times longer than the optimal solution',
+      'The Travelling Salesman Problem is a classic computer science question that asks what the shortest possible path you can take to visit every city once and return home. Naively checking every possible loop takes O(n!) time which scales terribly. Christofides algorithm finds a "pretty good" path in polynomial time. Christofides is an 1.5 approximation algorithm, meaning that our "pretty good" path is at most 1.5 times longer than the optimal solution',
     compute: (g) => asResult(g),
   },
   {
@@ -102,7 +102,7 @@ export const STEPS: StepDef[] = [
     id: 6,
     title: "Shortcut to a tour",
     explanation:
-      "Walk the Eulerian circuit and skip vertices already visited. Naive skipping works; the improved heuristic chooses which repeats to skip for a tighter tour. This tour is guaranteed within 1.5× of optimal.",
+      "Walk the Eulerian circuit and skip vertices already visited. Naive skipping works but the improved heuristic chooses which repeats to skip for a tighter tour. This tour is guaranteed within 1.5× of optimal.",
     compute: (g, _coords, useImproved) => {
       const tour = christofidesTour(g, useImproved);
       return { edges: pathToEdges(g.edges, tour), vertices: tour };

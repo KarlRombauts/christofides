@@ -21,7 +21,7 @@
     --secondary-foreground: 12 10% 15%;
 
     --muted: 30 15% 88%;             /* #DDD8D0 */
-    --muted-foreground: 15 8% 46%;   /* #7A6E68 */
+    --muted-foreground: 15 8% 34%;   /* ~#5E534F — WCAG AA (~6.6:1) */
 
     --accent: 30 15% 88%;
     --accent-foreground: 12 10% 15%;

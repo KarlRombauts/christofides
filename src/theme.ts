@@ -24,9 +24,9 @@ export const T = {
   nodeStroke:  '#8A7F78',          // default node stroke
 
   // Typography
-  text:        '#2B2320',          // primary body text
-  textMuted:   '#7A6E68',          // secondary / label text
-  textFaint:   '#AFA8A2',          // disabled / very dim
+  text:        '#2B2320',          // primary body text (~14:1)
+  textMuted:   '#5E544E',          // secondary / label text (~6.7:1 — WCAG AA)
+  textFaint:   '#6E635C',          // captions / hints (~5.3:1 — WCAG AA)
 
   // Font stacks
   serif:  '"IBM Plex Serif", "Georgia", "Times New Roman", serif',
