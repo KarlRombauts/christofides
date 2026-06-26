@@ -250,12 +250,12 @@ export default function App() {
       >
         <h1
           style={{
-            fontFamily:    T.serif,
-            fontSize:      isWide ? '26px' : '20px',
+            fontFamily:    T.sans,
+            fontSize:      isWide ? '24px' : '19px',
             fontWeight:    600,
             color:         T.text,
             margin:        0,
-            letterSpacing: '-0.01em',
+            letterSpacing: '-0.02em',
             lineHeight:    1.2,
           }}
         >
@@ -266,8 +266,9 @@ export default function App() {
             fontFamily: T.sans,
             fontSize:   isWide ? '14px' : '13px',
             color:      T.textMuted,
-            margin:     '4px 0 0 0',
-            lineHeight: 1.4,
+            margin:     '5px 0 0 0',
+            lineHeight: 1.5,
+            fontWeight: 400,
           }}
         >
           An interactive walkthrough of the 1.5-approximation algorithm for the
@@ -308,12 +309,11 @@ export default function App() {
           {/* Canvas interaction hints — placed directly below the canvas */}
           <p
             style={{
-              fontFamily: T.mono,
-              fontSize:   '11px',
+              fontFamily: T.sans,
+              fontSize:   '12px',
               color:      T.textFaint,
               marginTop:  '8px',
               lineHeight: 1.5,
-              letterSpacing: '0.01em',
             }}
           >
             Click canvas to add a node · Drag to move · Hover + ⌫ to delete

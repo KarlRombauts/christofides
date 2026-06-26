@@ -1,6 +1,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { StepDef } from '../model/steps';
 import { T } from '../theme';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export interface StepPanelProps {
   step: StepDef;
@@ -23,9 +34,9 @@ export interface StepPanelProps {
 
 function stepMetricLabel(stepId: number): string | null {
   switch (stepId) {
-    case 0: return null;             // complete graph — no weight to show
+    case 0: return null;
     case 1: return 'MST weight';
-    case 2: return null;             // shows count, not weight
+    case 2: return null;
     case 3: return 'Subgraph weight';
     case 4: return 'Matching weight';
     case 5: return 'Multigraph weight';
@@ -35,77 +46,7 @@ function stepMetricLabel(stepId: number): string | null {
   }
 }
 
-// ─── Divider ─────────────────────────────────────────────────────────────────
-
-function Divider() {
-  return (
-    <div style={{
-      height:     '1px',
-      background: T.panelBorder,
-      margin:     '0',
-    }} />
-  );
-}
-
-// ─── Shortcut toggle ─────────────────────────────────────────────────────────
-
-function ShortcutToggle({
-  value,
-  onChange,
-}: {
-  value:    boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <span style={{
-        fontFamily:    T.mono,
-        fontSize:      '10px',
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase' as const,
-        color:         T.textMuted,
-        fontWeight:    500,
-      }}>
-        Shortcut mode
-      </span>
-      <div style={{
-        display:      'flex',
-        border:       `1px solid ${T.panelBorder}`,
-        borderRadius: '4px',
-        overflow:     'hidden',
-        width:        'fit-content',
-      }}>
-        {(['naive', 'improved'] as const).map((mode, i) => {
-          const isActive = mode === 'improved' ? value : !value;
-          return (
-            <button
-              key={mode}
-              onClick={() => onChange(mode === 'improved')}
-              style={{
-                fontFamily:    T.mono,
-                fontSize:      '11px',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase' as const,
-                padding:       '6px 14px',
-                border:        'none',
-                borderRight:   i === 0 ? `1px solid ${T.panelBorder}` : 'none',
-                background:    isActive ? T.accent : T.panel,
-                color:         isActive ? '#FFFFFF' : T.textMuted,
-                cursor:        'pointer',
-                transition:    'background 0.15s ease, color 0.15s ease',
-                fontWeight:    isActive ? 600 : 400,
-              }}
-            >
-              {mode}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Compare to optimal button ───────────────────────────────────────────────
+// ─── Compare-to-optimal button (with tooltip when disabled) ──────────────────
 
 function CompareButton({
   onClick,
@@ -116,41 +57,39 @@ function CompareButton({
   enabled:   boolean;
   hasResult: boolean;
 }) {
-  return (
-    <button
+  const btn = (
+    <Button
+      variant={enabled ? 'outline' : 'outline'}
+      size="sm"
       onClick={onClick}
       disabled={!enabled}
-      title={
+      className="h-8 text-sm"
+      style={
         enabled
-          ? 'Compute exact optimal tour (brute-force, ≤9 vertices)'
-          : 'Reduce to ≤9 vertices to compare with optimal'
+          ? { borderColor: T.accent, color: T.accent }
+          : undefined
       }
-      style={{
-        fontFamily:  T.mono,
-        fontSize:    '11px',
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase' as const,
-        padding:     '8px 16px',
-        border:      `1px solid ${enabled ? T.accent : T.panelBorder}`,
-        borderRadius: '4px',
-        background:  enabled ? T.accentFaint : 'transparent',
-        color:       enabled ? T.accent : T.textFaint,
-        cursor:      enabled ? 'pointer' : 'not-allowed',
-        transition:  'all 0.15s ease',
-        whiteSpace:  'nowrap' as const,
-        fontWeight:  500,
-      }}
-      onMouseEnter={e => {
-        if (!enabled) return;
-        (e.currentTarget as HTMLButtonElement).style.background = T.accentMid;
-      }}
-      onMouseLeave={e => {
-        if (!enabled) return;
-        (e.currentTarget as HTMLButtonElement).style.background = T.accentFaint;
-      }}
     >
       {hasResult ? 'Optimal computed' : 'Compare to optimal'}
-    </button>
+    </Button>
+  );
+
+  if (enabled) return btn;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {/* Wrap disabled button so tooltip can fire */}
+          <span tabIndex={0} className="inline-flex">
+            {btn}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          Available for ≤ 9 nodes
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -167,21 +106,14 @@ function CurrentMetric({ stepId, currentWeight, oddVertexCount }: CurrentMetricP
 
   if (stepId === 2) {
     return (
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-        <span style={{
-          fontFamily: T.mono,
-          fontSize:   '28px',
-          fontWeight: 600,
-          color:      T.accent,
-          lineHeight: 1,
-        }}>
+      <div className="flex items-baseline gap-2">
+        <span
+          className="text-3xl font-semibold leading-none tabular-nums"
+          style={{ fontFamily: T.mono, color: T.accent }}
+        >
           {oddVertexCount}
         </span>
-        <span style={{
-          fontFamily: T.sans,
-          fontSize:   '13px',
-          color:      T.textMuted,
-        }}>
+        <span className="text-sm" style={{ fontFamily: T.sans, color: T.textMuted }}>
           odd-degree vertices
         </span>
       </div>
@@ -191,23 +123,51 @@ function CurrentMetric({ stepId, currentWeight, oddVertexCount }: CurrentMetricP
   if (!label) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-      <span style={{
-        fontFamily: T.mono,
-        fontSize:   '28px',
-        fontWeight: 600,
-        color:      T.text,
-        lineHeight: 1,
-      }}>
+    <div className="flex items-baseline gap-2">
+      <span
+        className="text-3xl font-semibold leading-none tabular-nums"
+        style={{ fontFamily: T.mono, color: T.text }}
+      >
         {Math.round(currentWeight)}
       </span>
-      <span style={{
-        fontFamily: T.sans,
-        fontSize:   '13px',
-        color:      T.textMuted,
-      }}>
+      <span className="text-sm" style={{ fontFamily: T.sans, color: T.textMuted }}>
         {label}
       </span>
+    </div>
+  );
+}
+
+// ─── Shortcut toggle (Tabs-based) ─────────────────────────────────────────────
+
+function ShortcutToggle({
+  value,
+  onChange,
+}: {
+  value:    boolean;
+  onChange: (v: boolean) => void;
+}) {
+  const current = value ? 'improved' : 'naive';
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span
+        className="text-sm"
+        style={{ color: T.textMuted, fontFamily: T.sans }}
+      >
+        Shortcut mode
+      </span>
+      <Tabs
+        value={current}
+        onValueChange={(v) => onChange(v === 'improved')}
+      >
+        <TabsList className="h-8">
+          <TabsTrigger value="naive" className="text-sm h-6 px-3">
+            Naive
+          </TabsTrigger>
+          <TabsTrigger value="improved" className="text-sm h-6 px-3">
+            Improved
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 }
@@ -215,81 +175,73 @@ function CurrentMetric({ stepId, currentWeight, oddVertexCount }: CurrentMetricP
 // ─── Final step summary (steps 6–7) ──────────────────────────────────────────
 
 interface FinalSummaryProps {
-  tourLength:    number;
-  mstWeight:     number;
-  ratio:         number | null;
-  optimal:       { length: number } | null;
-  onCompare:     () => void;
-  canCompare:    boolean;
+  tourLength: number;
+  mstWeight:  number;
+  ratio:      number | null;
+  optimal:    { length: number } | null;
+  onCompare:  () => void;
+  canCompare: boolean;
 }
 
 function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare }: FinalSummaryProps) {
-  // Christofides bounds the tour at 1.5x the OPTIMAL tour. The MST is only a
-  // lower bound on the optimum (optimal >= MST), so tour/MST is NOT the quantity
-  // the guarantee limits — it can exceed 1.5 while the tour is well within the
-  // guarantee. The honest ratio against the optimum is only knowable once the
-  // optimum is computed (brute force, <=9 vertices), so we show it only then.
   const ratioToOptimal =
     optimal !== null && optimal.length > 0 ? tourLength / optimal.length : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <div className="flex flex-col gap-3">
       {/* Tour length headline */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-        <span style={{
-          fontFamily: T.mono,
-          fontSize:   '32px',
-          fontWeight: 600,
-          color:      T.text,
-          lineHeight: 1,
-        }}>
+      <div className="flex items-baseline gap-2">
+        <span
+          className="text-4xl font-semibold leading-none tabular-nums"
+          style={{ fontFamily: T.mono, color: T.text }}
+        >
           {Math.round(tourLength)}
         </span>
-        <span style={{ fontFamily: T.sans, fontSize: '14px', color: T.textMuted }}>
+        <span className="text-sm" style={{ fontFamily: T.sans, color: T.textMuted }}>
           tour length
         </span>
       </div>
 
-      {/* The guarantee — stated against the optimal, not the MST */}
-      <div style={{
-        fontFamily: T.sans,
-        fontSize:   '13px',
-        color:      T.textMuted,
-        lineHeight: 1.5,
-      }}>
+      {/* Guarantee statement */}
+      <p
+        className="text-sm leading-relaxed"
+        style={{ fontFamily: T.sans, color: T.textMuted }}
+      >
         Christofides guarantees a tour within{' '}
         <span style={{ color: T.text, fontWeight: 500 }}>1.5×</span>
         {' '}the optimal tour.
-      </div>
+      </p>
 
-      {/* MST shown as what it is: a lower bound on the optimum */}
-      <div style={{ fontFamily: T.mono, fontSize: '12px', color: T.textFaint }}>
-        MST lower bound: {Math.round(mstWeight)}
-        {' '}
-        <span style={{ fontFamily: T.sans }}>(optimal ≥ this)</span>
-      </div>
+      {/* MST lower bound */}
+      <p
+        className="text-xs"
+        style={{ fontFamily: T.sans, color: T.textFaint }}
+      >
+        MST lower bound:{' '}
+        <span style={{ fontFamily: T.mono }}>{Math.round(mstWeight)}</span>
+        {' '}(optimal ≥ this)
+      </p>
 
-      {/* Actual ratio vs the true optimum — only once it's been computed */}
+      {/* Optimal result or compare button */}
       {optimal !== null && ratioToOptimal !== null ? (
-        <div style={{
-          padding:      '10px 14px',
-          background:   T.panelDeep,
-          borderRadius: '4px',
-          border:       `1px solid ${T.panelBorder}`,
-          fontFamily:   T.sans,
-          fontSize:     '13px',
-          color:        T.text,
-          lineHeight:   1.5,
-        }}>
+        <div
+          className="px-3.5 py-2.5 rounded-md text-sm leading-relaxed"
+          style={{
+            background:   T.panelDeep,
+            border:       `1px solid ${T.panelBorder}`,
+            fontFamily:   T.sans,
+            color:        T.text,
+          }}
+        >
           {ratioToOptimal <= 1.005 ? (
             <>
-              <strong>Optimal: {Math.round(optimal.length)}</strong>
+              <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
               {' — matched! '}
               <span style={{ color: T.accent, fontWeight: 600 }}>1.00× optimal ✓</span>
             </>
           ) : (
             <>
-              <strong>Optimal: {Math.round(optimal.length)}</strong>
+              <strong>Optimal: <span style={{ fontFamily: T.mono }}>{Math.round(optimal.length)}</span></strong>
               {' — this tour is '}
               <span style={{ color: T.accent, fontWeight: 600 }}>
                 {ratioToOptimal.toFixed(2)}× optimal
@@ -299,11 +251,7 @@ function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare }:
           )}
         </div>
       ) : (
-        <CompareButton
-          onClick={onCompare}
-          enabled={canCompare}
-          hasResult={false}
-        />
+        <CompareButton onClick={onCompare} enabled={canCompare} hasResult={false} />
       )}
     </div>
   );
@@ -325,42 +273,24 @@ export function StepPanel({
   const isFinalStep  = step.id === 6 || step.id === 7;
 
   return (
-    <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      background:    T.panel,
-      border:        `1px solid ${T.panelBorder}`,
-      borderRadius:  '6px',
-      overflow:      'hidden',
-      height:        '100%',
-    }}>
+    <Card className="flex flex-col h-full overflow-hidden" style={{ borderColor: T.panelBorder }}>
 
-      {/* ── Header bar ──────────────────────────────────────── */}
-      <div style={{
-        display:      'flex',
-        alignItems:   'center',
-        gap:          '12px',
-        padding:      '14px 18px',
-        background:   T.panelDeep,
-        borderBottom: `1px solid ${T.panelBorder}`,
-      }}>
-        {/* Step badge */}
-        <div style={{
-          fontFamily:    T.mono,
-          fontSize:      '10px',
-          letterSpacing: '0.1em',
-          color:         '#FFFFFF',
-          background:    T.accent,
-          padding:       '3px 8px',
-          borderRadius:  '3px',
-          fontWeight:    600,
-          flexShrink:    0,
-        }}>
-          {String(step.id + 1).padStart(2, '0')} / {8}
-        </div>
+      {/* ── Header: step badge + animated title ──────────────── */}
+      <CardHeader
+        className="flex-row items-center gap-3 py-3.5 px-4 space-y-0"
+        style={{ background: T.panelDeep, borderBottom: `1px solid ${T.panelBorder}` }}
+      >
+        {/* Step badge — numeric, mono, accent */}
+        <Badge
+          variant="default"
+          className="shrink-0 font-semibold tabular-nums text-xs rounded-sm"
+          style={{ fontFamily: T.mono }}
+        >
+          {String(step.id + 1).padStart(2, '0')} / 8
+        </Badge>
 
         {/* Animated step title */}
-        <div style={{ overflow: 'hidden', flex: 1 }}>
+        <div className="overflow-hidden flex-1">
           <AnimatePresence mode="wait">
             <motion.h2
               key={step.id}
@@ -368,23 +298,18 @@ export function StepPanel({
               animate={{ opacity: 1, y: 0 }}
               exit={{   opacity: 0, y: -4 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              style={{
-                margin:        0,
-                fontFamily:    T.serif,
-                fontSize:      '15px',
-                fontWeight:    600,
-                color:         T.text,
-                lineHeight:    1.3,
-              }}
+              className="m-0 text-base font-semibold leading-snug"
+              style={{ fontFamily: T.sans, color: T.text }}
             >
               {step.title}
             </motion.h2>
           </AnimatePresence>
         </div>
-      </div>
+      </CardHeader>
 
       {/* ── Explanation ──────────────────────────────────────── */}
-      <div style={{ padding: '16px 18px', borderBottom: `1px solid ${T.panelBorder}` }}>
+      <Separator />
+      <CardContent className="px-4 py-4" style={{ borderBottom: `1px solid ${T.panelBorder}` }}>
         <AnimatePresence mode="wait">
           <motion.p
             key={step.id}
@@ -392,21 +317,19 @@ export function StepPanel({
             animate={{ opacity: 1, y: 0 }}
             exit={{   opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: 'easeOut', delay: 0.05 }}
-            style={{
-              margin:     0,
-              fontFamily: T.sans,
-              fontSize:   '14px',
-              lineHeight: 1.65,
-              color:      T.textMuted,
-            }}
+            className="m-0 text-sm leading-relaxed"
+            style={{ fontFamily: T.sans, color: T.textMuted }}
           >
             {step.explanation}
           </motion.p>
         </AnimatePresence>
-      </div>
+      </CardContent>
 
       {/* ── Current step metric ───────────────────────────────── */}
-      <div style={{ padding: '16px 18px', borderBottom: `1px solid ${T.panelBorder}`, minHeight: '72px' }}>
+      <CardContent
+        className="px-4 py-4"
+        style={{ borderBottom: `1px solid ${T.panelBorder}`, minHeight: '72px' }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={`metric-${step.id}`}
@@ -433,34 +356,30 @@ export function StepPanel({
             )}
           </motion.div>
         </AnimatePresence>
-      </div>
+      </CardContent>
 
       {/* ── Shortcut toggle (steps 6–7) ───────────────────────── */}
-      <div style={{
-        padding:    '14px 18px',
-        opacity:    showShortcut ? 1 : 0.3,
-        transition: 'opacity 0.3s ease',
-        pointerEvents: showShortcut ? 'auto' : 'none',
-      }}>
-        <ShortcutToggle
-          value={useImprovedShortcut}
-          onChange={onToggleShortcut}
-        />
-      </div>
+      <CardContent
+        className="px-4 py-4 transition-opacity duration-300"
+        style={{
+          opacity:       showShortcut ? 1 : 0.3,
+          pointerEvents: showShortcut ? 'auto' : 'none',
+          borderBottom: !isFinalStep ? `1px solid ${T.panelBorder}` : undefined,
+        }}
+      >
+        <ShortcutToggle value={useImprovedShortcut} onChange={onToggleShortcut} />
+      </CardContent>
 
-      {/* Compare to optimal — shown on non-final steps, below shortcut */}
+      {/* ── Compare to optimal — on non-final steps ───────────── */}
       {!isFinalStep && (
-        <>
-          <Divider />
-          <div style={{ padding: '14px 18px' }}>
-            <CompareButton
-              onClick={onCompareOptimal}
-              enabled={canCompareOptimal}
-              hasResult={optimal !== null}
-            />
-          </div>
-        </>
+        <CardContent className="px-4 py-3.5">
+          <CompareButton
+            onClick={onCompareOptimal}
+            enabled={canCompareOptimal}
+            hasResult={optimal !== null}
+          />
+        </CardContent>
       )}
-    </div>
+    </Card>
   );
 }

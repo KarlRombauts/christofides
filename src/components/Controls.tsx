@@ -1,4 +1,16 @@
-import React from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  RotateCcw,
+  Shuffle,
+  Minus,
+  Plus,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import { T } from '../theme';
 
 export interface ControlsProps {
@@ -17,82 +29,35 @@ export interface ControlsProps {
 const MIN_VERTS = 4;
 const MAX_VERTS = 40;
 
-// ─── Base button component ────────────────────────────────────────────────────
+// ─── Step progress (pill dots) ────────────────────────────────────────────────
 
-interface BtnProps {
-  label:     React.ReactNode;
-  onClick:   () => void;
-  disabled?: boolean;
-  variant?:  'primary' | 'secondary' | 'ghost';
-  title?:    string;
-  wide?:     boolean;
-}
-
-function Btn({ label, onClick, disabled = false, variant = 'secondary', title, wide }: BtnProps) {
-  const isPrimary = variant === 'primary';
-  const isGhost   = variant === 'ghost';
-
-  const base: React.CSSProperties = {
-    fontFamily:    T.mono,
-    fontSize:      '12px',
-    fontWeight:    isPrimary ? 600 : 500,
-    letterSpacing: '0.06em',
-    padding:       isPrimary ? '9px 20px' : '8px 14px',
-    minWidth:      wide ? '80px' : undefined,
-    border:        `1px solid ${disabled ? T.panelBorder : isPrimary ? T.accent : T.panelBorder}`,
-    borderRadius:  '4px',
-    background:    disabled
-      ? 'transparent'
-      : isPrimary
-        ? T.accent
-        : 'transparent',
-    color:         disabled
-      ? T.textFaint
-      : isPrimary
-        ? '#FFFFFF'
-        : isGhost
-          ? T.textMuted
-          : T.text,
-    cursor:        disabled ? 'not-allowed' : 'pointer',
-    transition:    'all 0.15s ease',
-    userSelect:    'none',
-    flexShrink:    0,
-    lineHeight:    1,
-  };
-
-  function handleEnter(e: React.MouseEvent<HTMLButtonElement>) {
-    if (disabled) return;
-    const el = e.currentTarget as HTMLButtonElement;
-    if (isPrimary) {
-      el.style.background = T.accentDim;
-    } else {
-      el.style.borderColor = T.textMuted;
-      el.style.color = T.text;
-    }
-  }
-
-  function handleLeave(e: React.MouseEvent<HTMLButtonElement>) {
-    if (disabled) return;
-    const el = e.currentTarget as HTMLButtonElement;
-    if (isPrimary) {
-      el.style.background = T.accent;
-    } else {
-      el.style.borderColor = T.panelBorder;
-      el.style.color = isGhost ? T.textMuted : T.text;
-    }
-  }
-
+function StepProgress({ current, total }: { current: number; total: number }) {
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      style={base}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-    >
-      {label}
-    </button>
+    <div className="flex items-center gap-2.5">
+      {/* Pill dot timeline */}
+      <div className="flex items-center gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              width:        i === current ? '18px' : '6px',
+              height:       '6px',
+              borderRadius: '3px',
+              background:   i <= current ? T.accent : T.panelBorder,
+              transition:   'all 0.2s ease',
+              flexShrink:   0,
+            }}
+          />
+        ))}
+      </div>
+      {/* Text counter — sans font, sentence-case, comfortable size */}
+      <span
+        className="text-sm whitespace-nowrap tabular-nums"
+        style={{ color: T.textMuted, fontFamily: T.sans }}
+      >
+        Step {current + 1} of {total}
+      </span>
+    </div>
   );
 }
 
@@ -106,138 +71,55 @@ function NodeStepper({
   onChange: (n: number) => void;
 }) {
   return (
-    <div style={{
-      display:    'flex',
-      alignItems: 'center',
-      gap:        '10px',
-    }}>
-      <span style={{
-        fontFamily:    T.mono,
-        fontSize:      '12px',
-        color:         T.textMuted,
-        fontWeight:    500,
-        letterSpacing: '0.04em',
-      }}>
+    <div className="flex items-center gap-2.5">
+      <span
+        className="text-sm"
+        style={{ color: T.textMuted, fontFamily: T.sans }}
+      >
         Nodes
       </span>
-      <div style={{
-        display:      'flex',
-        alignItems:   'center',
-        border:       `1px solid ${T.panelBorder}`,
-        borderRadius: '4px',
-        overflow:     'hidden',
-      }}>
-        <button
-          onClick={() => onChange(Math.max(MIN_VERTS, value - 1))}
-          disabled={value <= MIN_VERTS}
-          title="Fewer nodes"
+      <div className="flex items-center border rounded-md overflow-hidden" style={{ borderColor: T.panelBorder }}>
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label="Decrease node count"
+          disabled={value <= MIN_VERTS}
+          onClick={() => onChange(Math.max(MIN_VERTS, value - 1))}
+          className="h-8 w-8 rounded-none border-r"
+          style={{ borderColor: T.panelBorder }}
+        >
+          <Minus className="h-3.5 w-3.5" />
+        </Button>
+        <span
+          className="px-3 text-sm font-semibold tabular-nums select-none"
           style={{
-            fontFamily:  T.mono,
-            fontSize:    '16px',
-            lineHeight:  1,
-            padding:     '5px 10px',
-            border:      'none',
-            borderRight: `1px solid ${T.panelBorder}`,
-            background:  'transparent',
-            color:       value <= MIN_VERTS ? T.textFaint : T.text,
-            cursor:      value <= MIN_VERTS ? 'not-allowed' : 'pointer',
+            minWidth:   '2.5rem',
+            textAlign:  'center',
+            fontFamily: T.mono,
+            color:      T.text,
           }}
         >
-          −
-        </button>
-        <span style={{
-          fontFamily:  T.mono,
-          fontSize:    '14px',
-          fontWeight:  600,
-          color:       T.text,
-          padding:     '5px 12px',
-          minWidth:    '36px',
-          textAlign:   'center',
-          userSelect:  'none',
-        }}>
           {value}
         </span>
-        <button
-          onClick={() => onChange(Math.min(MAX_VERTS, value + 1))}
-          disabled={value >= MAX_VERTS}
-          title="More nodes"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label="Increase node count"
-          style={{
-            fontFamily:  T.mono,
-            fontSize:    '16px',
-            lineHeight:  1,
-            padding:     '5px 10px',
-            border:      'none',
-            borderLeft:  `1px solid ${T.panelBorder}`,
-            background:  'transparent',
-            color:       value >= MAX_VERTS ? T.textFaint : T.text,
-            cursor:      value >= MAX_VERTS ? 'not-allowed' : 'pointer',
-          }}
+          disabled={value >= MAX_VERTS}
+          onClick={() => onChange(Math.min(MAX_VERTS, value + 1))}
+          className="h-8 w-8 rounded-none border-l"
+          style={{ borderColor: T.panelBorder }}
         >
-          +
-        </button>
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
       </div>
-      <span style={{
-        fontFamily: T.mono,
-        fontSize:   '11px',
-        color:      T.textFaint,
-      }}>
+      <span
+        className="text-xs"
+        style={{ color: T.textFaint, fontFamily: T.sans }}
+      >
         {MIN_VERTS}–{MAX_VERTS}
       </span>
     </div>
-  );
-}
-
-// ─── Step progress (dots + "Step N of M" label) ───────────────────────────────
-
-function StepProgress({ current, total }: { current: number; total: number }) {
-  return (
-    <div style={{
-      display:    'flex',
-      alignItems: 'center',
-      gap:        '10px',
-    }}>
-      {/* Dot timeline */}
-      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-        {Array.from({ length: total }, (_, i) => (
-          <div
-            key={i}
-            style={{
-              width:        i === current ? '18px' : '6px',
-              height:       '6px',
-              borderRadius: '3px',
-              background:   i <= current ? T.accent : T.panelBorder,
-              transition:   'all 0.2s ease',
-            }}
-          />
-        ))}
-      </div>
-      {/* Text counter */}
-      <span style={{
-        fontFamily:    T.mono,
-        fontSize:      '12px',
-        color:         T.textMuted,
-        letterSpacing: '0.04em',
-        whiteSpace:    'nowrap',
-      }}>
-        Step {current + 1} of {total}
-      </span>
-    </div>
-  );
-}
-
-// ─── Vertical divider ─────────────────────────────────────────────────────────
-
-function VDivider() {
-  return (
-    <div style={{
-      width:      '1px',
-      alignSelf:  'stretch',
-      background: T.panelBorder,
-      flexShrink: 0,
-      margin:     '0 4px',
-    }} />
   );
 }
 
@@ -259,102 +141,107 @@ export function Controls({
   const atEnd   = stepIndex >= numSteps - 1;
 
   return (
-    <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      background:    T.panel,
-      border:        `1px solid ${T.panelBorder}`,
-      borderRadius:  '6px',
-      overflow:      'hidden',
-    }}>
-
+    <div
+      className="flex flex-col rounded-lg border overflow-hidden"
+      style={{ background: T.panel, borderColor: T.panelBorder }}
+    >
       {/* ── Row 1: Playback + step progress ──────────────────── */}
-      <div style={{
-        display:    'flex',
-        alignItems: 'center',
-        gap:        '8px',
-        padding:    '12px 18px',
-        flexWrap:   'wrap',
-        borderBottom: `1px solid ${T.panelBorder}`,
-      }}>
-        {/* Playback group label */}
-        <span style={{
-          fontFamily:    T.mono,
-          fontSize:      '10px',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase' as const,
-          color:         T.textFaint,
-          marginRight:   '4px',
-        }}>
+      <div
+        className="flex items-center gap-2 px-4 py-3 flex-wrap"
+        style={{ borderBottom: `1px solid ${T.panelBorder}` }}
+      >
+        {/* Playback label — sentence-case, comfortable size, no mono */}
+        <span
+          className="text-xs mr-1"
+          style={{ color: T.textFaint, fontFamily: T.sans }}
+        >
           Playback
         </span>
 
-        {/* Prev / Play / Next / Reset */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <Btn
-            label="← Prev"
-            onClick={onPrev}
+        {/* Prev / Play(Pause) / Next / Reset */}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Previous step"
             disabled={atStart || playing}
-            title="Previous step"
-          />
-          <Btn
-            label={playing ? '⏸ Pause' : '▶ Play'}
+            onClick={onPrev}
+            className="h-8 gap-1.5"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="text-sm">Prev</span>
+          </Button>
+
+          <Button
+            variant="default"
+            size="sm"
+            aria-label={playing ? 'Pause auto-play' : 'Auto-play all steps'}
             onClick={onTogglePlay}
-            variant="primary"
-            title={playing ? 'Pause auto-play' : 'Auto-play all steps'}
-          />
-          <Btn
-            label="Next →"
-            onClick={onNext}
+            className={cn(
+              'h-8 gap-1.5 font-medium',
+              // When playing, keep it visually distinct
+            )}
+          >
+            {playing
+              ? <><Pause className="h-4 w-4" /><span className="text-sm">Pause</span></>
+              : <><Play  className="h-4 w-4" /><span className="text-sm">Play</span></>
+            }
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label="Next step"
             disabled={atEnd || playing}
-            title="Next step"
-          />
-          <Btn
-            label="↺ Reset"
-            onClick={onReset}
+            onClick={onNext}
+            className="h-8 gap-1.5"
+          >
+            <span className="text-sm">Next</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+
+          <Button
             variant="ghost"
-            title="Return to step 1"
-          />
+            size="sm"
+            aria-label="Return to step 1"
+            onClick={onReset}
+            className="h-8 gap-1.5"
+            style={{ color: T.textMuted }}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span className="text-sm">Reset</span>
+          </Button>
         </div>
 
-        <VDivider />
+        <Separator orientation="vertical" className="mx-1 h-5 self-center" />
 
-        {/* Step progress indicator — right next to playback */}
+        {/* Step progress */}
         <StepProgress current={stepIndex} total={numSteps} />
       </div>
 
       {/* ── Row 2: Graph settings ─────────────────────────────── */}
-      <div style={{
-        display:    'flex',
-        alignItems: 'center',
-        gap:        '16px',
-        padding:    '12px 18px',
-        flexWrap:   'wrap',
-      }}>
-        {/* Graph settings label */}
-        <span style={{
-          fontFamily:    T.mono,
-          fontSize:      '10px',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase' as const,
-          color:         T.textFaint,
-        }}>
+      <div className="flex items-center gap-4 px-4 py-3 flex-wrap">
+        {/* Section label — sentence-case, readable size */}
+        <span
+          className="text-xs"
+          style={{ color: T.textFaint, fontFamily: T.sans }}
+        >
           Graph
         </span>
 
-        {/* Node count stepper */}
-        <NodeStepper
-          value={vertexCount}
-          onChange={onVertexCount}
-        />
+        <NodeStepper value={vertexCount} onChange={onVertexCount} />
 
-        {/* Randomize — with graph settings, NOT with reset */}
-        <Btn
-          label="Randomize"
-          onClick={onRandomize}
+        <Button
           variant="ghost"
-          title="Generate a new random graph with the current node count"
-        />
+          size="sm"
+          aria-label="Generate a new random graph with the current node count"
+          onClick={onRandomize}
+          className="h-8 gap-1.5"
+          style={{ color: T.textMuted }}
+        >
+          <Shuffle className="h-3.5 w-3.5" />
+          <span className="text-sm">Randomize</span>
+        </Button>
       </div>
     </div>
   );

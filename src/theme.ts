@@ -29,6 +29,6 @@ export const T = {
 
   // Font stacks
   serif:  '"IBM Plex Serif", "Georgia", "Times New Roman", serif',
-  sans:   '"IBM Plex Sans", "Helvetica Neue", system-ui, sans-serif',
+  sans:   '"DM Sans", "Helvetica Neue", system-ui, sans-serif',
   mono:   '"IBM Plex Mono", "JetBrains Mono", "Courier New", monospace',
 } as const;
