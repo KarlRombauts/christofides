@@ -29,8 +29,8 @@ describe('useChristofides', () => {
     expect(result.current.metrics.currentWeight).toBe(result.current.metrics.tourLength);
   });
 
-  it('currentWeight is 0 for step 2 (odd-vertices, no edges in result)', () => {
+  it('currentWeight equals mstWeight on step 2 (odd vertices shown on the MST)', () => {
     const { result } = renderHook(() => useChristofides(verts, 2, true));
-    expect(result.current.metrics.currentWeight).toBe(0);
+    expect(result.current.metrics.currentWeight).toBe(result.current.metrics.mstWeight);
   });
 });

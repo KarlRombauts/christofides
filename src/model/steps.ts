@@ -69,8 +69,13 @@ export const STEPS: StepDef[] = [
     id: 2,
     title: 'Odd-degree vertices',
     explanation:
-      'A tour needs every vertex to have even degree. The vertices with odd degree in the tree are the ones we must fix.',
-    compute: (g) => asResult(christofidesSteps[2](g)),
+      'A tour needs every vertex to have even degree. Shown on the spanning tree, the pulsing vertices touch an odd number of tree edges — these are the ones we must fix.',
+    // Show the MST itself so "odd degree" is meaningful, with the odd-degree
+    // vertices returned for pulsing/highlighting on top of it.
+    compute: (g) => {
+      const mst = kruskalMST(g);
+      return { edges: mst, vertices: findOddVertices(mst) };
+    },
   },
   {
     id: 3,
