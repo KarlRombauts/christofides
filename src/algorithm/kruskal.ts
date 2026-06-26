@@ -3,7 +3,8 @@ import { compareEdges, Graph } from './graph';
 
 export function kruskalMST(graph: Graph) {
   const mst = [];
-  const edges = graph.edges.sort(compareEdges);
+  // Use a sorted copy to avoid mutating the graph's edge array
+  const edges = graph.edges.slice().sort(compareEdges);
   const disjointSet = new DisjointSet(graph.vertices);
 
   let index = 0;

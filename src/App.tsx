@@ -53,6 +53,7 @@ export default function App() {
   // ── Drag / hover state ───────────────────────────────────────────────────────
   const draggingId = useRef<number | null>(null);
   const hoveredId = useRef<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ── Keyboard delete ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function App() {
     (id: number, e: PointerEvent<SVGCircleElement>) => {
       e.stopPropagation();
       draggingId.current = id;
+      setIsDragging(true);
       (e.currentTarget as SVGCircleElement).setPointerCapture(e.pointerId);
     },
     [],
@@ -99,6 +101,7 @@ export default function App() {
   const onSvgPointerUp = useCallback(
     (_e: PointerEvent<SVGSVGElement>) => {
       draggingId.current = null;
+      setIsDragging(false);
     },
     [],
   );
@@ -106,6 +109,7 @@ export default function App() {
   const onSvgPointerLeave = useCallback(
     (_e: PointerEvent<SVGSVGElement>) => {
       hoveredId.current = null;
+      setIsDragging(false);
     },
     [],
   );
@@ -293,6 +297,7 @@ export default function App() {
             pulseVertices={pulseVertices}
             width={CANVAS_W}
             height={CANVAS_H}
+            dragging={isDragging}
             onVertexPointerDown={onVertexPointerDown}
             onVertexPointerEnter={onVertexPointerEnter}
             onBackgroundPointerDown={onBackgroundPointerDown}

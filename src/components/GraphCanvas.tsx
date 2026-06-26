@@ -28,6 +28,8 @@ export interface GraphCanvasProps {
   _onSvgPointerMove?: (e: PointerEvent<SVGSVGElement>) => void;
   _onSvgPointerUp?: (e: PointerEvent<SVGSVGElement>) => void;
   _onSvgPointerLeave?: (e: PointerEvent<SVGSVGElement>) => void;
+  /** When true, edges snap (no Framer Motion animation) for drag performance */
+  dragging?: boolean;
 }
 
 function edgeKey(e: AlgoEdge) {
@@ -42,6 +44,7 @@ export function GraphCanvas({
   pulseVertices = [],
   width = 600,
   height = 500,
+  dragging = false,
   onVertexPointerDown,
   onVertexPointerEnter,
   onBackgroundPointerDown,
@@ -137,6 +140,7 @@ export function GraphCanvas({
             highlight={false}
             weight={weight}
             dimmed={hasHighlights}
+            dragging={dragging}
           />
         ))}
       </g>
@@ -157,6 +161,7 @@ export function GraphCanvas({
                 x1={x1} y1={y1} x2={x2} y2={y2}
                 highlight={true}
                 weight={weight}
+                dragging={dragging}
               />
             </motion.g>
           ))}

@@ -16,12 +16,39 @@ interface EdgeProps {
   /** When true, the base edge fades further (a highlight is active in the scene) */
   dimmed?: boolean;
   filterId?: string; // kept for API compat, not used
+  /** When true, render as plain static <line> — no Framer Motion, no hover — for drag perf */
+  dragging?: boolean;
 }
 
 const transition = { type: 'tween', duration: 0.25, ease: 'easeInOut' } as const;
 
-export function Edge({ x1, y1, x2, y2, highlight = false, weight, dimmed = false, filterId: _filterId }: EdgeProps) {
+export function Edge({ x1, y1, x2, y2, highlight = false, weight, dimmed = false, filterId: _filterId, dragging = false }: EdgeProps) {
   const [hovered, setHovered] = useState(false);
+
+  // ── Fast path: during drag, skip Framer Motion entirely ──────────────────────
+  if (dragging) {
+    if (highlight) {
+      return (
+        <line
+          x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke={T.edgeHighlight}
+          strokeOpacity={1}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+        />
+      );
+    }
+    const opacity = dimmed ? 0.3 : 0.55;
+    return (
+      <line
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke={T.edgeBase}
+        strokeOpacity={opacity}
+        strokeWidth={1}
+        strokeLinecap="round"
+      />
+    );
+  }
 
   // Midpoint for the weight label
   const mx = (x1 + x2) / 2;
