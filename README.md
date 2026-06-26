@@ -2,7 +2,7 @@
 
 An interactive, step-by-step visual explainer of Christofides' algorithm for the Travelling Salesman Problem, guaranteed to find a tour within **1.5× of optimal** for metric TSP instances.
 
-**Live demo:** _(deploy to Netlify — see below)_
+**Live demo:** _(GitHub Pages — see Deploy below; paste URL after first deploy)_
 
 ![Christofides Explainer](docs/screenshots/step0-complete-graph.png)
 
@@ -122,21 +122,13 @@ npm run build   # production build → dist/
 
 ## Deploy
 
-The repo includes a `netlify.toml` configured for one-command deploys:
+Deployed to **GitHub Pages** via GitHub Actions (`.github/workflows/deploy.yml`):
+every push to `main` runs the tests, builds, and publishes `dist/`. Vite uses a
+relative `base`, so it works under the project subpath without extra config.
 
-```toml
-[build]
-  command = "npm run build"
-  publish = "dist"
-```
-
-Connect the repository in the Netlify dashboard, or deploy manually:
-
-```bash
-npx netlify deploy --build --prod
-```
-
-After the first deploy, paste the production URL into the live demo link at the top of this file.
+One-time setup: in the repository, go to **Settings → Pages → Build and
+deployment → Source** and select **GitHub Actions**. After the first run,
+paste the published URL into the live demo link at the top of this file.
 
 ---
 
