@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn/ui CSS variable theme — tuned to "Editorial Paper" palette */
+    --background: 33 30% 96%;        /* #F7F4F0 warm off-white */
+    --foreground: 12 10% 15%;        /* #2B2320 primary text */
+
+    --card: 0 0% 100%;               /* #FFFFFF */
+    --card-foreground: 12 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 12 10% 15%;
+
+    --primary: 5 63% 47%;            /* #C0392B terracotta accent */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 20% 93%;         /* #EDE8E2 */
+    --secondary-foreground: 12 10% 15%;
+
+    --muted: 30 15% 88%;             /* #DDD8D0 */
+    --muted-foreground: 15 8% 46%;   /* #7A6E68 */
+
+    --accent: 30 15% 88%;
+    --accent-foreground: 12 10% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 15% 84%;            /* ~#DDD8D0 */
+    --input: 30 15% 84%;
+    --ring: 5 63% 47%;               /* terracotta ring */
+
+    --radius: 0.5rem;
+
+    --chart-1: 5 63% 47%;
+    --chart-2: 200 70% 50%;
+    --chart-3: 160 60% 45%;
+    --chart-4: 40 80% 55%;
+    --chart-5: 280 65% 60%;
+  }
+
+  /* Preserve the existing base styles so Tailwind preflight doesn't regress the UI */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: #F7F4F0;
+    color: #2B2320;
+    font-family: "IBM Plex Sans", "Helvetica Neue", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #root {
+    min-height: 100%;
+  }
+}
