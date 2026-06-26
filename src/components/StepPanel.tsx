@@ -286,7 +286,7 @@ export function StepPanel({
           className="shrink-0 font-semibold tabular-nums text-xs rounded-sm"
           style={{ fontFamily: T.mono }}
         >
-          {String(step.id + 1).padStart(2, '0')} / 8
+          {step.id + 1}/8
         </Badge>
 
         {/* Animated step title */}
