@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -63,6 +64,10 @@ function StepProgress({ current, total }: { current: number; total: number }) {
 
 // ─── Node count stepper ───────────────────────────────────────────────────────
 
+function clampVerts(n: number): number {
+  return Math.min(MAX_VERTS, Math.max(MIN_VERTS, n));
+}
+
 function NodeStepper({
   value,
   onChange,
@@ -70,6 +75,18 @@ function NodeStepper({
   value:    number;
   onChange: (n: number) => void;
 }) {
+  // Local draft so the user can clear the field and type a multi-digit number;
+  // the value is clamped and committed on blur / Enter.
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => { setDraft(String(value)); }, [value]);
+
+  function commit() {
+    const n = parseInt(draft, 10);
+    const next = Number.isNaN(n) ? value : clampVerts(n);
+    onChange(next);
+    setDraft(String(next));
+  }
+
   return (
     <div className="flex items-center gap-2.5">
       <span
@@ -84,29 +101,34 @@ function NodeStepper({
           size="icon"
           aria-label="Decrease node count"
           disabled={value <= MIN_VERTS}
-          onClick={() => onChange(Math.max(MIN_VERTS, value - 1))}
+          onClick={() => onChange(clampVerts(value - 1))}
           className="h-8 w-8 rounded-none border-r"
           style={{ borderColor: T.panelBorder }}
         >
           <Minus className="h-3.5 w-3.5" />
         </Button>
-        <span
-          className="px-3 text-sm font-semibold tabular-nums select-none"
+        <input
+          type="text"
+          inputMode="numeric"
+          aria-label="Node count"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          className="px-1 text-sm font-semibold tabular-nums bg-transparent outline-none focus:bg-black/[0.03]"
           style={{
-            minWidth:   '2.5rem',
+            width:      '2.75rem',
             textAlign:  'center',
             fontFamily: T.mono,
             color:      T.text,
           }}
-        >
-          {value}
-        </span>
+        />
         <Button
           variant="ghost"
           size="icon"
           aria-label="Increase node count"
           disabled={value >= MAX_VERTS}
-          onClick={() => onChange(Math.min(MAX_VERTS, value + 1))}
+          onClick={() => onChange(clampVerts(value + 1))}
           className="h-8 w-8 rounded-none border-l"
           style={{ borderColor: T.panelBorder }}
         >
