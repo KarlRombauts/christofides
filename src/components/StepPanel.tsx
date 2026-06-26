@@ -269,8 +269,13 @@ export function StepPanel({
   canCompareOptimal,
   oddVertexCount = 0,
 }: StepPanelProps) {
-  const showShortcut = step.id === 6 || step.id === 7;
   const isFinalStep  = step.id === 6 || step.id === 7;
+  // Shortcut toggle only matters on the shortcutting steps (6–7).
+  const showShortcut = isFinalStep;
+  // Only render the metric section when the step actually has something to show:
+  // the final tour summary, the odd-vertex count (step 2), or a labelled weight.
+  const showMetric =
+    isFinalStep || step.id === 2 || stepMetricLabel(step.id) !== null;
 
   return (
     <Card className="flex flex-col h-full overflow-hidden" style={{ borderColor: T.panelBorder }}>
@@ -309,7 +314,10 @@ export function StepPanel({
 
       {/* ── Explanation ──────────────────────────────────────── */}
       <Separator />
-      <CardContent className="px-4 py-4" style={{ borderBottom: `1px solid ${T.panelBorder}` }}>
+      <CardContent
+        className="px-4 py-4"
+        style={{ borderBottom: showMetric || showShortcut ? `1px solid ${T.panelBorder}` : undefined }}
+      >
         <AnimatePresence mode="wait">
           <motion.p
             key={step.id}
@@ -325,59 +333,45 @@ export function StepPanel({
         </AnimatePresence>
       </CardContent>
 
-      {/* ── Current step metric ───────────────────────────────── */}
-      <CardContent
-        className="px-4 py-4"
-        style={{ borderBottom: `1px solid ${T.panelBorder}`, minHeight: '72px' }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`metric-${step.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            {isFinalStep && metrics.tourLength !== null ? (
-              <FinalSummary
-                tourLength={metrics.tourLength}
-                mstWeight={metrics.mstWeight}
-                ratio={metrics.ratio}
-                optimal={optimal}
-                onCompare={onCompareOptimal}
-                canCompare={canCompareOptimal}
-              />
-            ) : (
-              <CurrentMetric
-                stepId={step.id}
-                currentWeight={metrics.currentWeight}
-                oddVertexCount={oddVertexCount}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </CardContent>
+      {/* ── Current step metric — only when the step has one ──── */}
+      {showMetric && (
+        <CardContent
+          className="px-4 py-4"
+          style={{ borderBottom: showShortcut ? `1px solid ${T.panelBorder}` : undefined }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`metric-${step.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isFinalStep && metrics.tourLength !== null ? (
+                <FinalSummary
+                  tourLength={metrics.tourLength}
+                  mstWeight={metrics.mstWeight}
+                  ratio={metrics.ratio}
+                  optimal={optimal}
+                  onCompare={onCompareOptimal}
+                  canCompare={canCompareOptimal}
+                />
+              ) : (
+                <CurrentMetric
+                  stepId={step.id}
+                  currentWeight={metrics.currentWeight}
+                  oddVertexCount={oddVertexCount}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </CardContent>
+      )}
 
-      {/* ── Shortcut toggle (steps 6–7) ───────────────────────── */}
-      <CardContent
-        className="px-4 py-4 transition-opacity duration-300"
-        style={{
-          opacity:       showShortcut ? 1 : 0.3,
-          pointerEvents: showShortcut ? 'auto' : 'none',
-          borderBottom: !isFinalStep ? `1px solid ${T.panelBorder}` : undefined,
-        }}
-      >
-        <ShortcutToggle value={useImprovedShortcut} onChange={onToggleShortcut} />
-      </CardContent>
-
-      {/* ── Compare to optimal — on non-final steps ───────────── */}
-      {!isFinalStep && (
-        <CardContent className="px-4 py-3.5">
-          <CompareButton
-            onClick={onCompareOptimal}
-            enabled={canCompareOptimal}
-            hasResult={optimal !== null}
-          />
+      {/* ── Shortcut toggle — only on the shortcutting steps (6–7) ── */}
+      {showShortcut && (
+        <CardContent className="px-4 py-4">
+          <ShortcutToggle value={useImprovedShortcut} onChange={onToggleShortcut} />
         </CardContent>
       )}
     </Card>
