@@ -200,7 +200,10 @@ export default function App() {
   }, [verts, graph, canCompareOptimal]);
 
   // ── Canvas props ──────────────────────────────────────────────────────────────
-  const highlightEdges = result.edges;
+  // Step 0 shows the complete graph itself: render its edges as the muted base
+  // layer (no accent), keeping nodes prominent — accenting every edge just makes
+  // the complete graph an unreadable mess. Later steps accent their result edges.
+  const highlightEdges = stepIndex === 0 ? [] : result.edges;
   const highlightVertices = result.vertices;
   const pulseVertices = stepIndex === 2 ? result.vertices : [];
   // For step 2: pass the count of odd-degree vertices
