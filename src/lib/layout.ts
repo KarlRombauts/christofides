@@ -37,5 +37,17 @@ export function randomLayout(n: number, width: number, height: number): Position
     }
     verts.push({ id: i, x, y });
   }
+
+  // Center the cloud's bounding box in the canvas so the graph isn't lopsided.
+  if (verts.length > 0) {
+    const xs = verts.map((v) => v.x);
+    const ys = verts.map((v) => v.y);
+    const dx = width / 2 - (Math.min(...xs) + Math.max(...xs)) / 2;
+    const dy = height / 2 - (Math.min(...ys) + Math.max(...ys)) / 2;
+    for (const v of verts) {
+      v.x += dx;
+      v.y += dy;
+    }
+  }
   return verts;
 }
