@@ -8,3 +8,7 @@ dist-ssr
 # TypeScript build info
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Local tooling / scratch
+.superpowers/
+.claude/
