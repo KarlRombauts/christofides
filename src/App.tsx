@@ -62,14 +62,17 @@ export default function App() {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Backspace' && hoveredId.current !== null) {
         e.preventDefault(); // stop Backspace from triggering browser back-navigation
-        deleteVertex(hoveredId.current);
-        hoveredId.current = null;
-        setOptimal(null);
+        // Guard: never go below 3 vertices — the tour steps require at least 3
+        if (verts.length > 3) {
+          deleteVertex(hoveredId.current);
+          hoveredId.current = null;
+          setOptimal(null);
+        }
       }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [deleteVertex]);
+  }, [deleteVertex, verts.length]);
 
   // ── Pointer callbacks ────────────────────────────────────────────────────────
   const onVertexPointerDown = useCallback(

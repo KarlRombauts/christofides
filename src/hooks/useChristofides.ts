@@ -14,14 +14,16 @@ export function useChristofides(
     const step = STEPS[stepIndex];
     const result = step.compute(graph, coords, useImprovedShortcut);
     const isTour = stepIndex === 6 || stepIndex === 7;
+    const currentWeight = tourLength(result.edges);
     return {
       step,
       result,
       graph,
       metrics: {
         mstWeight: mstWeight(graph),
-        tourLength: isTour ? tourLength(result.edges) : null,
+        tourLength: isTour ? currentWeight : null,
         ratio: isTour ? approximationRatio(result.edges, graph) : null,
+        currentWeight,
       },
     };
   }, [verts, stepIndex, useImprovedShortcut]);

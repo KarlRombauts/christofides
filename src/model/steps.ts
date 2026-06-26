@@ -7,6 +7,7 @@ import { kruskalMST } from '../algorithm/kruskal';
 import { minimumWeightPerfectMatching } from '../algorithm/minimumMatching';
 import { applyOptimalShortcuts } from '../algorithm/optimalShortcuts';
 import { Point, removeCrossings } from '../algorithm/removeCrossings';
+import { tourLength } from '../model/metrics';
 import { uniq } from 'ramda';
 
 export type StepResult = { edges: Edge[]; vertices: Vertex[] };
@@ -32,12 +33,21 @@ function eulerianCircuit(graph: Graph): Vertex[] {
   return findEulerianPath(new Graph([...mst, ...matching]).edges);
 }
 
-function christofidesTour(graph: Graph, useImproved: boolean): Vertex[] {
-  const circuit = eulerianCircuit(graph);
-  if (useImproved) return applyOptimalShortcuts(graph.edges, circuit);
+function naiveTour(circuit: Vertex[]): Vertex[] {
   const tour = uniq(circuit);
   tour.push(tour[0]);
   return tour;
+}
+
+function christofidesTour(graph: Graph, useImproved: boolean): Vertex[] {
+  const circuit = eulerianCircuit(graph);
+  const naive = naiveTour(circuit);
+  if (!useImproved) return naive;
+  const improved = applyOptimalShortcuts(graph.edges, circuit);
+  // Safety net: never return improved if it's longer than naive
+  const improvedLen = tourLength(pathToEdges(graph.edges, improved));
+  const naiveLen = tourLength(pathToEdges(graph.edges, naive));
+  return improvedLen <= naiveLen ? improved : naive;
 }
 
 export const STEPS: StepDef[] = [
