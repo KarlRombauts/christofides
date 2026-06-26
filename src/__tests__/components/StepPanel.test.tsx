@@ -17,6 +17,8 @@ describe('StepPanel', () => {
         canCompareOptimal={true}
       />,
     );
-    expect(screen.getByText(/Minimum spanning tree/i)).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: /Minimum spanning tree/i }),
+    ).toBeTruthy();
   });
 });

@@ -64,16 +64,14 @@ export const STEPS: StepDef[] = [
     id: 1,
     title: "Minimum spanning tree",
     explanation:
-      "Kruskal's algorithm finds the cheapest set of edges that connects every vertex. Its total weight is a lower bound on the optimal tour.",
+      "The first step of the algorithm is to compute a minimum spanning tree (MST). There are a few algorithms that do this efficiently, in this case we are using Kruskal's algorithm. The total weight of the MST acts as lower bound on the optimal tour.",
     compute: (g) => asResult(christofidesSteps[1](g)),
   },
   {
     id: 2,
     title: "Odd-degree vertices",
     explanation:
-      "A tour needs every vertex to have even degree. Shown on the spanning tree, the pulsing vertices touch an odd number of tree edges — these are the ones we must fix.",
-    // Show the MST itself so "odd degree" is meaningful, with the odd-degree
-    // vertices returned for pulsing/highlighting on top of it.
+      "Next, we can observe that a tour needs every vertex to have even degree. The highlighted verticies all touch an odd number of MST edges. These are the ones we must fix.",
     compute: (g) => {
       const mst = kruskalMST(g);
       return { edges: mst, vertices: findOddVertices(mst) };
@@ -83,14 +81,14 @@ export const STEPS: StepDef[] = [
     id: 3,
     title: "Induced subgraph",
     explanation:
-      "Consider only the connections among those odd-degree vertices — the candidates for pairing them up.",
+      "We want to add an aditional edge to each of these vertices, which we can do by finding a low cost pairing between these verticies. So first we consider only the connections among the odd-degree vertices which are the candidates edges for pairing them up.",
     compute: (g) => asResult(christofidesSteps[3](g)),
   },
   {
     id: 4,
     title: "Minimum-weight perfect matching",
     explanation:
-      "Pair up the odd vertices as cheaply as possible using Edmonds' blossom algorithm — the step that makes Christofides a 1.5-approximation.",
+      "Now we pair up the odd vertices as cheaply as possible using Edmonds' blossom algorithm.",
     compute: (g) => asResult(christofidesSteps[4](g)),
   },
   {
