@@ -223,14 +223,14 @@ interface FinalSummaryProps {
   canCompare:    boolean;
 }
 
-function FinalSummary({ tourLength, mstWeight, ratio, optimal, onCompare, canCompare }: FinalSummaryProps) {
-  const pct = ratio !== null ? ratio : tourLength / mstWeight;
-  const isClose = ratio !== null && ratio >= 1.4;
-
-  const optimalDelta =
-    optimal !== null
-      ? ((tourLength - optimal.length) / optimal.length) * 100
-      : null;
+function FinalSummary({ tourLength, mstWeight, optimal, onCompare, canCompare }: FinalSummaryProps) {
+  // Christofides bounds the tour at 1.5x the OPTIMAL tour. The MST is only a
+  // lower bound on the optimum (optimal >= MST), so tour/MST is NOT the quantity
+  // the guarantee limits — it can exceed 1.5 while the tour is well within the
+  // guarantee. The honest ratio against the optimum is only knowable once the
+  // optimum is computed (brute force, <=9 vertices), so we show it only then.
+  const ratioToOptimal =
+    optimal !== null && optimal.length > 0 ? tourLength / optimal.length : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -240,7 +240,7 @@ function FinalSummary({ tourLength, mstWeight, ratio, optimal, onCompare, canCom
           fontFamily: T.mono,
           fontSize:   '32px',
           fontWeight: 600,
-          color:      isClose ? T.accent : T.text,
+          color:      T.text,
           lineHeight: 1,
         }}>
           {Math.round(tourLength)}
@@ -250,30 +250,27 @@ function FinalSummary({ tourLength, mstWeight, ratio, optimal, onCompare, canCom
         </span>
       </div>
 
-      {/* MST bound line */}
+      {/* The guarantee — stated against the optimal, not the MST */}
       <div style={{
         fontFamily: T.sans,
         fontSize:   '13px',
         color:      T.textMuted,
         lineHeight: 1.5,
       }}>
-        <span style={{ color: isClose ? T.accent : T.text, fontWeight: 500 }}>
-          {pct.toFixed(2)}×
-        </span>
-        {' '}the MST lower bound
-        {' '}
-        <span style={{ color: T.textFaint, fontSize: '12px' }}>
-          (Christofides guarantees ≤ 1.5×)
-        </span>
+        Christofides guarantees a tour within{' '}
+        <span style={{ color: T.text, fontWeight: 500 }}>1.5×</span>
+        {' '}the optimal tour.
       </div>
 
-      {/* MST weight for reference */}
+      {/* MST shown as what it is: a lower bound on the optimum */}
       <div style={{ fontFamily: T.mono, fontSize: '12px', color: T.textFaint }}>
-        MST weight: {Math.round(mstWeight)}
+        MST lower bound: {Math.round(mstWeight)}
+        {' '}
+        <span style={{ fontFamily: T.sans }}>(optimal ≥ this)</span>
       </div>
 
-      {/* Optimal comparison result */}
-      {optimal !== null && optimalDelta !== null ? (
+      {/* Actual ratio vs the true optimum — only once it's been computed */}
+      {optimal !== null && ratioToOptimal !== null ? (
         <div style={{
           padding:      '10px 14px',
           background:   T.panelDeep,
@@ -284,19 +281,20 @@ function FinalSummary({ tourLength, mstWeight, ratio, optimal, onCompare, canCom
           color:        T.text,
           lineHeight:   1.5,
         }}>
-          {optimalDelta <= 0.5 ? (
+          {ratioToOptimal <= 1.005 ? (
             <>
               <strong>Optimal: {Math.round(optimal.length)}</strong>
-              {' — matched!' }
+              {' — matched! '}
+              <span style={{ color: T.accent, fontWeight: 600 }}>1.00× optimal ✓</span>
             </>
           ) : (
             <>
               <strong>Optimal: {Math.round(optimal.length)}</strong>
               {' — this tour is '}
               <span style={{ color: T.accent, fontWeight: 600 }}>
-                +{optimalDelta.toFixed(1)}%
+                {ratioToOptimal.toFixed(2)}× optimal
               </span>
-              {' above optimal.'}
+              {ratioToOptimal <= 1.5 ? ' ✓ within the guarantee.' : '.'}
             </>
           )}
         </div>
