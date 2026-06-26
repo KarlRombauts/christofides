@@ -146,26 +146,40 @@ export function GraphCanvas({
       </g>
 
       {/* Highlight edges — terracotta accent, rendered on top.
-          Only these animate; AnimatePresence handles enter/exit. */}
+          When idle, AnimatePresence cross-fades them on enter/exit. During a
+          drag the MST/tour is recomputed every frame, so we drop the fade and
+          render them as plain lines that snap instantly with the dragged node. */}
       <g role="group" aria-label="highlight edges">
-        <AnimatePresence>
-          {highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
-            <motion.g
+        {dragging ? (
+          highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
+            <Edge
               key={key}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              <Edge
-                x1={x1} y1={y1} x2={x2} y2={y2}
-                highlight={true}
-                weight={weight}
-                dragging={dragging}
-              />
-            </motion.g>
-          ))}
-        </AnimatePresence>
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              highlight={true}
+              weight={weight}
+              dragging={true}
+            />
+          ))
+        ) : (
+          <AnimatePresence>
+            {highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
+              <motion.g
+                key={key}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <Edge
+                  x1={x1} y1={y1} x2={x2} y2={y2}
+                  highlight={true}
+                  weight={weight}
+                  dragging={false}
+                />
+              </motion.g>
+            ))}
+          </AnimatePresence>
+        )}
       </g>
 
       {/* Vertices — rendered last, sit on top of all edges.
