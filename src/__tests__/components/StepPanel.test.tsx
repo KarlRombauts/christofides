@@ -1,7 +1,7 @@
 // src/__tests__/components/StepPanel.test.tsx
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StepPanel } from '../../components/StepPanel';
+import { StepPanel } from '../../components/panel';
 import { STEPS } from '../../model/steps';
 
 describe('StepPanel', () => {

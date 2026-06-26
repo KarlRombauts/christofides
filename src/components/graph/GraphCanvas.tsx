@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { PointerEvent, useMemo, useState } from 'react';
-import { Edge as AlgoEdge, Vertex } from '../algorithm/graph';
-import { PositionedVertex } from '../model/graphModel';
-import { Edge, EdgeHoverInfo, EdgeWeightTooltip } from './Edge';
+import { Edge as AlgoEdge, Vertex } from '../../algorithm/graph';
+import { PositionedVertex } from '../../model/graphModel';
+import { Edge, EdgeHoverInfo } from './Edge';
+import { EdgeWeightTooltip } from './EdgeWeightTooltip';
 import { Vertex as VertexComp } from './Vertex';
-import { T } from '../theme';
+import { T } from '../../theme';
 
 export interface GraphCanvasProps {
   /** Positioned vertices for all nodes in the graph */

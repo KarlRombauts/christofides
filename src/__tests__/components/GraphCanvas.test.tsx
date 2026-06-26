@@ -1,7 +1,7 @@
 // src/__tests__/components/GraphCanvas.test.tsx
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
-import { GraphCanvas } from '../../components/GraphCanvas';
+import { GraphCanvas } from '../../components/graph';
 import { buildGraph } from '../../model/graphModel';
 import { circularLayout } from '../../lib/layout';
 

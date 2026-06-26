@@ -1,7 +1,7 @@
 import { PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { GraphCanvas } from './components/GraphCanvas';
-import { StepPanel } from './components/StepPanel';
-import { Controls } from './components/Controls';
+import { GraphCanvas } from './components/graph';
+import { StepPanel } from './components/panel';
+import { Controls } from './components/controls';
 import { useGraphInteraction } from './hooks/useGraphInteraction';
 import { useChristofides } from './hooks/useChristofides';
 import { circularLayout, randomLayout } from './lib/layout';

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { PointerEvent } from 'react';
-import { T } from '../theme';
+import { T } from '../../theme';
 
 interface VertexProps {
   id: number;
