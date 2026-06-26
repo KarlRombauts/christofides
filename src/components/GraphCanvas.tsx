@@ -83,12 +83,30 @@ export function GraphCanvas({
   // Are there any highlighted edges active in this scene?
   const hasHighlights = highlightEdges.length > 0;
 
-  function edgeCoords(e: AlgoEdge) {
-    const a = posMap.get(e.v);
-    const b = posMap.get(e.u);
-    if (!a || !b) return null;
-    return { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
-  }
+  // Precompute all data needed to render base edges — coords + weight resolved once per edge.
+  // Deps: pureBaseEdges (changes when baseEdges/highlightKeys change), posMap (changes on drag),
+  // weightMap (changes when baseEdges change), hasHighlights (controls dimmed flag).
+  const baseEdgeData = useMemo(() => {
+    return pureBaseEdges.flatMap((e) => {
+      const a = posMap.get(e.v);
+      const b = posMap.get(e.u);
+      if (!a || !b) return [];
+      const key = edgeKey(e);
+      return [{ key, x1: a.x, y1: a.y, x2: b.x, y2: b.y, weight: weightMap.get(key) }];
+    });
+  }, [pureBaseEdges, posMap, weightMap]);
+
+  // Precompute all data needed to render highlight edges.
+  // Deps: highlightEdges (changes on step toggle), posMap (changes on drag), weightMap.
+  const highlightEdgeData = useMemo(() => {
+    return highlightEdges.flatMap((e) => {
+      const a = posMap.get(e.v);
+      const b = posMap.get(e.u);
+      if (!a || !b) return [];
+      const key = edgeKey(e);
+      return [{ key: `hl-${key}`, x1: a.x, y1: a.y, x2: b.x, y2: b.y, weight: weightMap.get(key) }];
+    });
+  }, [highlightEdges, posMap, weightMap]);
 
   return (
     <svg
@@ -112,46 +130,36 @@ export function GraphCanvas({
           They recede visually: light warm gray, low contrast.
           When highlights are active, they fade even further (dimmed=true). */}
       <g role="group" aria-label="base edges">
-        {pureBaseEdges.map((e) => {
-          const coords = edgeCoords(e);
-          if (!coords) return null;
-          const w = weightMap.get(edgeKey(e));
-          return (
-            <Edge
-              key={edgeKey(e)}
-              {...coords}
-              highlight={false}
-              weight={w}
-              dimmed={hasHighlights}
-            />
-          );
-        })}
+        {baseEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
+          <Edge
+            key={key}
+            x1={x1} y1={y1} x2={x2} y2={y2}
+            highlight={false}
+            weight={weight}
+            dimmed={hasHighlights}
+          />
+        ))}
       </g>
 
       {/* Highlight edges — terracotta accent, rendered on top.
           Only these animate; AnimatePresence handles enter/exit. */}
       <g role="group" aria-label="highlight edges">
         <AnimatePresence>
-          {highlightEdges.map((e) => {
-            const coords = edgeCoords(e);
-            if (!coords) return null;
-            const w = weightMap.get(edgeKey(e));
-            return (
-              <motion.g
-                key={`hl-${edgeKey(e)}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <Edge
-                  {...coords}
-                  highlight={true}
-                  weight={w}
-                />
-              </motion.g>
-            );
-          })}
+          {highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
+            <motion.g
+              key={key}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <Edge
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                highlight={true}
+                weight={weight}
+              />
+            </motion.g>
+          ))}
         </AnimatePresence>
       </g>
 
