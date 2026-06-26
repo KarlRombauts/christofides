@@ -80,7 +80,7 @@ export function NodeStepper({
         </Button>
       </div>
       <span
-        className="text-xs"
+        className="hidden sm:inline text-xs"
         style={{ color: T.textFaint, fontFamily: T.sans }}
       >
         {MIN_VERTS}–{MAX_VERTS}

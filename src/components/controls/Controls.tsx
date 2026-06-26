@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 import { T } from '../../theme';
 import { StepProgress } from './StepProgress';
 import { NodeStepper } from './NodeStepper';
@@ -50,26 +49,26 @@ export function Controls({
     >
       {/* ── Row 1: Playback + step progress ──────────────────── */}
       <div
-        className="flex items-center gap-2 px-4 py-3 flex-wrap"
+        className="flex flex-col gap-2.5 px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2"
         style={{ borderBottom: `1px solid ${T.panelBorder}` }}
       >
-        {/* Playback label — sentence-case, comfortable size, no mono */}
+        {/* Playback label — desktop only */}
         <span
-          className="text-xs mr-1"
+          className="hidden sm:inline text-xs mr-1"
           style={{ color: T.textFaint, fontFamily: T.sans }}
         >
           Playback
         </span>
 
-        {/* Prev / Play(Pause) / Next / Reset */}
-        <div className="flex items-center gap-1.5">
+        {/* Prev / Play(Pause) / Next fill the row on mobile; Reset is compact */}
+        <div className="flex items-center gap-1.5 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             aria-label="Previous step"
             disabled={atStart || playing}
             onClick={onPrev}
-            className="h-8 gap-1.5"
+            className="h-8 gap-1.5 flex-1 sm:flex-initial"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="text-sm">Prev</span>
@@ -80,10 +79,7 @@ export function Controls({
             size="sm"
             aria-label={playing ? 'Pause auto-play' : 'Auto-play all steps'}
             onClick={onTogglePlay}
-            className={cn(
-              'h-8 gap-1.5 font-medium',
-              // When playing, keep it visually distinct
-            )}
+            className="h-8 gap-1.5 font-medium flex-1 sm:flex-initial"
           >
             {playing
               ? <><Pause className="h-4 w-4" /><span className="text-sm">Pause</span></>
@@ -97,7 +93,7 @@ export function Controls({
             aria-label="Next step"
             disabled={atEnd || playing}
             onClick={onNext}
-            className="h-8 gap-1.5"
+            className="h-8 gap-1.5 flex-1 sm:flex-initial"
           >
             <span className="text-sm">Next</span>
             <ChevronRight className="h-4 w-4" />
@@ -108,25 +104,27 @@ export function Controls({
             size="sm"
             aria-label="Return to step 1"
             onClick={onReset}
-            className="h-8 gap-1.5"
+            className="h-8 gap-1.5 px-2 sm:px-3"
             style={{ color: T.textMuted }}
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            <span className="text-sm">Reset</span>
+            <span className="hidden sm:inline text-sm">Reset</span>
           </Button>
         </div>
 
-        <Separator orientation="vertical" className="mx-1 h-5 self-center" />
+        <Separator orientation="vertical" className="hidden sm:block mx-1 h-5 self-center" />
 
-        {/* Step progress */}
-        <StepProgress current={stepIndex} total={numSteps} />
+        {/* Step progress — centered on its own line on mobile */}
+        <div className="flex w-full justify-center sm:w-auto sm:justify-start">
+          <StepProgress current={stepIndex} total={numSteps} />
+        </div>
       </div>
 
       {/* ── Row 2: Graph settings ─────────────────────────────── */}
-      <div className="flex items-center gap-4 px-4 py-3 flex-wrap">
-        {/* Section label — sentence-case, readable size */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap sm:justify-start sm:gap-4">
+        {/* Section label — desktop only */}
         <span
-          className="text-xs"
+          className="hidden sm:inline text-xs"
           style={{ color: T.textFaint, fontFamily: T.sans }}
         >
           Graph
