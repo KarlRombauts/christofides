@@ -293,83 +293,110 @@ export default function App() {
         </p>
       </header>
 
-      {/* ── Main content: graph + panel side-by-side (wide) or stacked ── */}
-      <div
-        style={{
-          width:         '100%',
-          maxWidth:      '1020px',
-          display:       'flex',
-          flexDirection: isWide ? 'row' : 'column',
-          gap:           '20px',
-          alignItems:    isWide ? 'flex-start' : 'stretch',
-          marginBottom:  '16px',
-        }}
-      >
-        {/* ── Graph canvas + hint caption ────────────────────── */}
-        <div style={{ flexShrink: 0 }}>
-          <GraphCanvas
-            verts={verts}
-            baseEdges={graph.edges}
-            highlightEdges={highlightEdges}
-            compareEdges={compareEdges}
-            highlightVertices={highlightVertices}
-            pulseVertices={pulseVertices}
-            width={CANVAS_W}
-            height={CANVAS_H}
-            dragging={isDragging}
-            onVertexPointerDown={onVertexPointerDown}
-            onVertexPointerEnter={onVertexPointerEnter}
-            onBackgroundPointerDown={onBackgroundPointerDown}
-            _onSvgPointerMove={onSvgPointerMove}
-            _onSvgPointerUp={onSvgPointerUp}
-            _onSvgPointerLeave={onSvgPointerLeave}
-          />
-          {/* Canvas interaction hints — placed directly below the canvas */}
-          <p
+      {(() => {
+        const graphBlock = (
+          <div
+            style={
+              isWide
+                ? { flex: `0 0 ${CANVAS_W}px`, maxWidth: `${CANVAS_W}px` }
+                : { width: '100%', maxWidth: `${CANVAS_W}px`, margin: '0 auto' }
+            }
+          >
+            <GraphCanvas
+              verts={verts}
+              baseEdges={graph.edges}
+              highlightEdges={highlightEdges}
+              compareEdges={compareEdges}
+              highlightVertices={highlightVertices}
+              pulseVertices={pulseVertices}
+              width={CANVAS_W}
+              height={CANVAS_H}
+              dragging={isDragging}
+              onVertexPointerDown={onVertexPointerDown}
+              onVertexPointerEnter={onVertexPointerEnter}
+              onBackgroundPointerDown={onBackgroundPointerDown}
+              _onSvgPointerMove={onSvgPointerMove}
+              _onSvgPointerUp={onSvgPointerUp}
+              _onSvgPointerLeave={onSvgPointerLeave}
+            />
+            {/* Canvas interaction hints — placed directly below the canvas */}
+            <p
+              style={{
+                fontFamily: T.sans,
+                fontSize:   '12px',
+                color:      T.textFaint,
+                marginTop:  '8px',
+                lineHeight: 1.5,
+              }}
+            >
+              Click canvas to add a node · Drag to move · Hover + ⌫ to delete
+            </p>
+          </div>
+        );
+
+        const panelBlock = (
+          <div style={isWide ? { flex: 1, minWidth: 0 } : { width: '100%' }}>
+            <StepPanel
+              step={step}
+              metrics={metrics}
+              optimal={optimal}
+              useImprovedShortcut={useImprovedShortcut}
+              onToggleShortcut={setUseImprovedShortcut}
+              onCompareOptimal={onCompareOptimal}
+              canCompareOptimal={canCompareOptimal}
+              oddVertexCount={oddVertexCount}
+              tourView={tourView}
+              onTourView={setTourView}
+            />
+          </div>
+        );
+
+        const controlsBlock = (
+          <div style={{ width: '100%' }}>
+            <Controls
+              stepIndex={stepIndex}
+              numSteps={STEPS.length}
+              playing={playing}
+              onPrev={onPrev}
+              onNext={onNext}
+              onTogglePlay={onTogglePlay}
+              onReset={onReset}
+              onRandomize={onRandomize}
+              vertexCount={vertexCount}
+              onVertexCount={onVertexCount}
+            />
+          </div>
+        );
+
+        // Wide: graph + panel side by side, controls full-width below.
+        // Narrow: graph, then playback controls, then the step panel.
+        return isWide ? (
+          <>
+            <div
+              style={{
+                width: '100%', maxWidth: '1020px', display: 'flex',
+                flexDirection: 'row', gap: '20px', alignItems: 'flex-start',
+                marginBottom: '16px',
+              }}
+            >
+              {graphBlock}
+              {panelBlock}
+            </div>
+            <div style={{ width: '100%', maxWidth: '1020px' }}>{controlsBlock}</div>
+          </>
+        ) : (
+          <div
             style={{
-              fontFamily: T.sans,
-              fontSize:   '12px',
-              color:      T.textFaint,
-              marginTop:  '8px',
-              lineHeight: 1.5,
+              width: '100%', maxWidth: '1020px', display: 'flex',
+              flexDirection: 'column', gap: '16px',
             }}
           >
-            Click canvas to add a node · Drag to move · Hover + ⌫ to delete
-          </p>
-        </div>
-
-        {/* ── Step panel ─────────────────────────────────────────── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <StepPanel
-            step={step}
-            metrics={metrics}
-            optimal={optimal}
-            useImprovedShortcut={useImprovedShortcut}
-            onToggleShortcut={setUseImprovedShortcut}
-            onCompareOptimal={onCompareOptimal}
-            canCompareOptimal={canCompareOptimal}
-            oddVertexCount={oddVertexCount}
-            tourView={tourView}
-            onTourView={setTourView}
-          />
-        </div>
-      </div>
-
-      {/* ── Controls (full width) ──────────────────────────────────── */}
-      <div style={{ width: '100%', maxWidth: '1020px' }}>
-        <Controls
-          stepIndex={stepIndex}
-          numSteps={STEPS.length}
-          playing={playing}
-          onPrev={onPrev}
-          onNext={onNext}
-          onTogglePlay={onTogglePlay}
-          onReset={onReset}
-          onRandomize={onRandomize}
-          vertexCount={vertexCount}
-          onVertexCount={onVertexCount}
-        />
-      </div>
+            {graphBlock}
+            {controlsBlock}
+            {panelBlock}
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -136,13 +136,18 @@ export function GraphCanvas({
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
+      preserveAspectRatio="xMidYMid meet"
       style={{
         display: 'block',
+        // Scale to the container; viewBox keeps the coordinate system fixed and
+        // svgCoordsOf normalizes by the rendered rect, so interaction still works.
+        width: '100%',
+        height: 'auto',
+        maxWidth: `${width}px`,
         background: T.bg,
         borderRadius: '6px',
         border: `1px solid ${T.panelBorder}`,
+        touchAction: 'none', // let pointer-drag work on touch without page panning
       }}
       onPointerDown={onBackgroundPointerDown}
       onPointerMove={_onSvgPointerMove}
