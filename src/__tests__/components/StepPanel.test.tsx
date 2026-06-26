@@ -9,7 +9,7 @@ describe('StepPanel', () => {
     render(
       <StepPanel
         step={STEPS[1]}
-        metrics={{ tourLength: null, mstWeight: 12, ratio: null }}
+        metrics={{ tourLength: null, mstWeight: 12, ratio: null, currentWeight: 0 }}
         optimal={null}
         useImprovedShortcut={true}
         onToggleShortcut={() => {}}

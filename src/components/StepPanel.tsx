@@ -5,87 +5,49 @@ import { T } from '../theme';
 export interface StepPanelProps {
   step: StepDef;
   metrics: {
-    tourLength: number | null;
-    mstWeight:  number;
-    ratio:      number | null;
+    tourLength:    number | null;
+    mstWeight:     number;
+    ratio:         number | null;
+    currentWeight: number;
   };
-  optimal:            { length: number } | null;
+  optimal:             { length: number } | null;
   useImprovedShortcut: boolean;
-  onToggleShortcut:   (v: boolean) => void;
-  onCompareOptimal:   () => void;
-  canCompareOptimal:  boolean;
+  onToggleShortcut:    (v: boolean) => void;
+  onCompareOptimal:    () => void;
+  canCompareOptimal:   boolean;
+  /** Vertex count for step 2 odd-degree display */
+  oddVertexCount?: number;
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Step-specific metric label ───────────────────────────────────────────────
 
-function ScanLine() {
+function stepMetricLabel(stepId: number): string | null {
+  switch (stepId) {
+    case 0: return null;             // complete graph — no weight to show
+    case 1: return 'MST weight';
+    case 2: return null;             // shows count, not weight
+    case 3: return 'Subgraph weight';
+    case 4: return 'Matching weight';
+    case 5: return 'Multigraph weight';
+    case 6: return 'Tour length';
+    case 7: return 'Tour length';
+    default: return null;
+  }
+}
+
+// ─── Divider ─────────────────────────────────────────────────────────────────
+
+function Divider() {
   return (
     <div style={{
-      height: '1px',
-      background: `linear-gradient(90deg, transparent 0%, ${T.panelBorder} 20%, ${T.muted} 50%, ${T.panelBorder} 80%, transparent 100%)`,
-      margin: '0',
+      height:     '1px',
+      background: T.panelBorder,
+      margin:     '0',
     }} />
   );
 }
 
-interface DataFieldProps {
-  label:     string;
-  value:     string;
-  unit?:     string;
-  accent?:   'cyan' | 'amber' | 'dim';
-  glow?:     boolean;
-}
-
-function DataField({ label, value, unit, accent = 'cyan', glow = false }: DataFieldProps) {
-  const valueColor =
-    accent === 'cyan'  ? T.cyan  :
-    accent === 'amber' ? T.amber :
-    T.label;
-
-  const bgColor =
-    glow && accent === 'cyan'  ? T.cyanFaint  :
-    glow && accent === 'amber' ? T.amberDim   :
-    'transparent';
-
-  return (
-    <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      gap:           '3px',
-      padding:       '8px 10px',
-      background:    bgColor,
-      borderLeft:    `2px solid ${accent === 'cyan' ? T.muted : accent === 'amber' ? T.amber : T.textFaint}`,
-      borderRadius:  '0 2px 2px 0',
-      transition:    'background 0.3s ease',
-    }}>
-      <span style={{
-        fontFamily:    T.mono,
-        fontSize:      '9px',
-        letterSpacing: '0.12em',
-        color:         T.label,
-        textTransform: 'uppercase' as const,
-      }}>
-        {label}
-      </span>
-      <span style={{
-        fontFamily:    T.mono,
-        fontSize:      '15px',
-        fontWeight:    600,
-        color:         valueColor,
-        letterSpacing: '0.04em',
-        lineHeight:    1,
-        textShadow:    glow && accent === 'cyan' ? `0 0 10px ${T.cyanGlow}` : 'none',
-      }}>
-        {value}
-        {unit && (
-          <span style={{ fontSize: '10px', color: T.label, marginLeft: '3px', fontWeight: 400 }}>
-            {unit}
-          </span>
-        )}
-      </span>
-    </div>
-  );
-}
+// ─── Shortcut toggle ─────────────────────────────────────────────────────────
 
 function ShortcutToggle({
   value,
@@ -95,47 +57,43 @@ function ShortcutToggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      gap:           '6px',
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <span style={{
         fontFamily:    T.mono,
-        fontSize:      '9px',
-        letterSpacing: '0.12em',
-        color:         T.label,
+        fontSize:      '10px',
+        letterSpacing: '0.08em',
         textTransform: 'uppercase' as const,
+        color:         T.textMuted,
+        fontWeight:    500,
       }}>
-        Shortcut Mode
+        Shortcut mode
       </span>
       <div style={{
-        display:        'flex',
-        gap:            '0',
-        border:         `1px solid ${T.muted}`,
-        borderRadius:   '2px',
-        overflow:       'hidden',
-        width:          'fit-content',
+        display:      'flex',
+        border:       `1px solid ${T.panelBorder}`,
+        borderRadius: '4px',
+        overflow:     'hidden',
+        width:        'fit-content',
       }}>
-        {(['naive', 'improved'] as const).map((mode) => {
+        {(['naive', 'improved'] as const).map((mode, i) => {
           const isActive = mode === 'improved' ? value : !value;
           return (
             <button
               key={mode}
               onClick={() => onChange(mode === 'improved')}
               style={{
-                fontFamily:      T.mono,
-                fontSize:        '10px',
-                letterSpacing:   '0.08em',
-                textTransform:   'uppercase' as const,
-                padding:         '5px 10px',
-                border:          'none',
-                borderRight:     mode === 'naive' ? `1px solid ${T.muted}` : 'none',
-                background:      isActive ? T.cyan       : T.panelDeep,
-                color:           isActive ? '#001820'    : T.label,
-                cursor:          'pointer',
-                transition:      'background 0.15s ease, color 0.15s ease',
-                fontWeight:      isActive ? 700 : 400,
+                fontFamily:    T.mono,
+                fontSize:      '11px',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase' as const,
+                padding:       '6px 14px',
+                border:        'none',
+                borderRight:   i === 0 ? `1px solid ${T.panelBorder}` : 'none',
+                background:    isActive ? T.accent : T.panel,
+                color:         isActive ? '#FFFFFF' : T.textMuted,
+                cursor:        'pointer',
+                transition:    'background 0.15s ease, color 0.15s ease',
+                fontWeight:    isActive ? 600 : 400,
               }}
             >
               {mode}
@@ -146,6 +104,8 @@ function ShortcutToggle({
     </div>
   );
 }
+
+// ─── Compare to optimal button ───────────────────────────────────────────────
 
 function CompareButton({
   onClick,
@@ -160,40 +120,198 @@ function CompareButton({
     <button
       onClick={onClick}
       disabled={!enabled}
-      title={enabled ? 'Compute exact optimal tour (brute-force, ≤9 vertices)' : 'Add ≤9 vertices to enable optimal comparison'}
+      title={
+        enabled
+          ? 'Compute exact optimal tour (brute-force, ≤9 vertices)'
+          : 'Reduce to ≤9 vertices to compare with optimal'
+      }
       style={{
-        fontFamily:    T.mono,
-        fontSize:      '10px',
-        letterSpacing: '0.10em',
+        fontFamily:  T.mono,
+        fontSize:    '11px',
+        letterSpacing: '0.06em',
         textTransform: 'uppercase' as const,
-        padding:       '7px 14px',
-        border:        `1px solid ${enabled ? T.cyan : T.textFaint}`,
-        borderRadius:  '2px',
-        background:    enabled ? T.cyanFaint : 'transparent',
-        color:         enabled ? T.cyan      : T.textFaint,
-        cursor:        enabled ? 'pointer'   : 'not-allowed',
-        boxShadow:     enabled ? `0 0 12px ${T.cyanGlow}, inset 0 0 8px rgba(0,229,255,0.04)` : 'none',
-        transition:    'all 0.2s ease',
-        whiteSpace:    'nowrap' as const,
-        alignSelf:     'flex-start',
+        padding:     '8px 16px',
+        border:      `1px solid ${enabled ? T.accent : T.panelBorder}`,
+        borderRadius: '4px',
+        background:  enabled ? T.accentFaint : 'transparent',
+        color:       enabled ? T.accent : T.textFaint,
+        cursor:      enabled ? 'pointer' : 'not-allowed',
+        transition:  'all 0.15s ease',
+        whiteSpace:  'nowrap' as const,
+        fontWeight:  500,
       }}
       onMouseEnter={e => {
         if (!enabled) return;
-        (e.currentTarget as HTMLButtonElement).style.background = T.cyanGlow;
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 20px ${T.cyanGlow}, inset 0 0 12px rgba(0,229,255,0.08)`;
+        (e.currentTarget as HTMLButtonElement).style.background = T.accentMid;
       }}
       onMouseLeave={e => {
         if (!enabled) return;
-        (e.currentTarget as HTMLButtonElement).style.background = T.cyanFaint;
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 12px ${T.cyanGlow}, inset 0 0 8px rgba(0,229,255,0.04)`;
+        (e.currentTarget as HTMLButtonElement).style.background = T.accentFaint;
       }}
     >
-      {hasResult ? '◎ Optimal Computed' : '◎ Compare to Optimal'}
+      {hasResult ? 'Optimal computed' : 'Compare to optimal'}
     </button>
   );
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
+// ─── Current step metric display ─────────────────────────────────────────────
+
+interface CurrentMetricProps {
+  stepId:         number;
+  currentWeight:  number;
+  oddVertexCount: number;
+}
+
+function CurrentMetric({ stepId, currentWeight, oddVertexCount }: CurrentMetricProps) {
+  const label = stepMetricLabel(stepId);
+
+  if (stepId === 2) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <span style={{
+          fontFamily: T.mono,
+          fontSize:   '28px',
+          fontWeight: 600,
+          color:      T.accent,
+          lineHeight: 1,
+        }}>
+          {oddVertexCount}
+        </span>
+        <span style={{
+          fontFamily: T.sans,
+          fontSize:   '13px',
+          color:      T.textMuted,
+        }}>
+          odd-degree vertices
+        </span>
+      </div>
+    );
+  }
+
+  if (!label) return null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+      <span style={{
+        fontFamily: T.mono,
+        fontSize:   '28px',
+        fontWeight: 600,
+        color:      T.text,
+        lineHeight: 1,
+      }}>
+        {Math.round(currentWeight)}
+      </span>
+      <span style={{
+        fontFamily: T.sans,
+        fontSize:   '13px',
+        color:      T.textMuted,
+      }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Final step summary (steps 6–7) ──────────────────────────────────────────
+
+interface FinalSummaryProps {
+  tourLength:    number;
+  mstWeight:     number;
+  ratio:         number | null;
+  optimal:       { length: number } | null;
+  onCompare:     () => void;
+  canCompare:    boolean;
+}
+
+function FinalSummary({ tourLength, mstWeight, ratio, optimal, onCompare, canCompare }: FinalSummaryProps) {
+  const pct = ratio !== null ? ratio : tourLength / mstWeight;
+  const isClose = ratio !== null && ratio >= 1.4;
+
+  const optimalDelta =
+    optimal !== null
+      ? ((tourLength - optimal.length) / optimal.length) * 100
+      : null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Tour length headline */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+        <span style={{
+          fontFamily: T.mono,
+          fontSize:   '32px',
+          fontWeight: 600,
+          color:      isClose ? T.accent : T.text,
+          lineHeight: 1,
+        }}>
+          {Math.round(tourLength)}
+        </span>
+        <span style={{ fontFamily: T.sans, fontSize: '14px', color: T.textMuted }}>
+          tour length
+        </span>
+      </div>
+
+      {/* MST bound line */}
+      <div style={{
+        fontFamily: T.sans,
+        fontSize:   '13px',
+        color:      T.textMuted,
+        lineHeight: 1.5,
+      }}>
+        <span style={{ color: isClose ? T.accent : T.text, fontWeight: 500 }}>
+          {pct.toFixed(2)}×
+        </span>
+        {' '}the MST lower bound
+        {' '}
+        <span style={{ color: T.textFaint, fontSize: '12px' }}>
+          (Christofides guarantees ≤ 1.5×)
+        </span>
+      </div>
+
+      {/* MST weight for reference */}
+      <div style={{ fontFamily: T.mono, fontSize: '12px', color: T.textFaint }}>
+        MST weight: {Math.round(mstWeight)}
+      </div>
+
+      {/* Optimal comparison result */}
+      {optimal !== null && optimalDelta !== null ? (
+        <div style={{
+          padding:      '10px 14px',
+          background:   T.panelDeep,
+          borderRadius: '4px',
+          border:       `1px solid ${T.panelBorder}`,
+          fontFamily:   T.sans,
+          fontSize:     '13px',
+          color:        T.text,
+          lineHeight:   1.5,
+        }}>
+          {optimalDelta <= 0.5 ? (
+            <>
+              <strong>Optimal: {Math.round(optimal.length)}</strong>
+              {' — matched!' }
+            </>
+          ) : (
+            <>
+              <strong>Optimal: {Math.round(optimal.length)}</strong>
+              {' — this tour is '}
+              <span style={{ color: T.accent, fontWeight: 600 }}>
+                +{optimalDelta.toFixed(1)}%
+              </span>
+              {' above optimal.'}
+            </>
+          )}
+        </div>
+      ) : (
+        <CompareButton
+          onClick={onCompare}
+          enabled={canCompare}
+          hasResult={false}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function StepPanel({
   step,
@@ -203,17 +321,10 @@ export function StepPanel({
   onToggleShortcut,
   onCompareOptimal,
   canCompareOptimal,
+  oddVertexCount = 0,
 }: StepPanelProps) {
   const showShortcut = step.id === 6 || step.id === 7;
-
-  // Determine ratio accent: amber if ≥1.4, cyan otherwise
-  const ratioAccent: 'cyan' | 'amber' =
-    metrics.ratio !== null && metrics.ratio >= 1.4 ? 'amber' : 'cyan';
-
-  const optimalDelta =
-    optimal && metrics.tourLength !== null
-      ? ((metrics.tourLength - optimal.length) / optimal.length) * 100
-      : null;
+  const isFinalStep  = step.id === 6 || step.id === 7;
 
   return (
     <div style={{
@@ -221,52 +332,51 @@ export function StepPanel({
       flexDirection: 'column',
       background:    T.panel,
       border:        `1px solid ${T.panelBorder}`,
-      borderRadius:  '4px',
+      borderRadius:  '6px',
       overflow:      'hidden',
-      fontFamily:    T.mono,
+      height:        '100%',
     }}>
 
       {/* ── Header bar ──────────────────────────────────────── */}
       <div style={{
-        display:        'flex',
-        alignItems:     'center',
-        gap:            '10px',
-        padding:        '10px 14px',
-        background:     T.panelDeep,
-        borderBottom:   `1px solid ${T.panelBorder}`,
+        display:      'flex',
+        alignItems:   'center',
+        gap:          '12px',
+        padding:      '14px 18px',
+        background:   T.panelDeep,
+        borderBottom: `1px solid ${T.panelBorder}`,
       }}>
         {/* Step badge */}
         <div style={{
           fontFamily:    T.mono,
-          fontSize:      '9px',
-          letterSpacing: '0.14em',
-          color:         '#001820',
-          background:    T.cyan,
-          padding:       '2px 7px',
-          borderRadius:  '2px',
-          fontWeight:    700,
+          fontSize:      '10px',
+          letterSpacing: '0.1em',
+          color:         '#FFFFFF',
+          background:    T.accent,
+          padding:       '3px 8px',
+          borderRadius:  '3px',
+          fontWeight:    600,
           flexShrink:    0,
         }}>
-          {`STEP ${String(step.id).padStart(2, '0')}`}
+          {String(step.id + 1).padStart(2, '0')} / {8}
         </div>
 
-        {/* Animated title */}
+        {/* Animated step title */}
         <div style={{ overflow: 'hidden', flex: 1 }}>
           <AnimatePresence mode="wait">
             <motion.h2
               key={step.id}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{   opacity: 0, x: -12 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{   opacity: 0, y: -4 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               style={{
                 margin:        0,
-                fontFamily:    T.mono,
-                fontSize:      '13px',
+                fontFamily:    T.serif,
+                fontSize:      '15px',
                 fontWeight:    600,
-                letterSpacing: '0.04em',
-                color:         T.white,
-                lineHeight:    1.2,
+                color:         T.text,
+                lineHeight:    1.3,
               }}
             >
               {step.title}
@@ -276,21 +386,20 @@ export function StepPanel({
       </div>
 
       {/* ── Explanation ──────────────────────────────────────── */}
-      <div style={{ padding: '12px 14px', minHeight: '64px' }}>
+      <div style={{ padding: '16px 18px', borderBottom: `1px solid ${T.panelBorder}` }}>
         <AnimatePresence mode="wait">
           <motion.p
             key={step.id}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{   opacity: 0, y: -4 }}
-            transition={{ duration: 0.26, ease: 'easeOut', delay: 0.05 }}
+            transition={{ duration: 0.22, ease: 'easeOut', delay: 0.05 }}
             style={{
               margin:     0,
-              fontFamily: T.mono,
-              fontSize:   '12px',
+              fontFamily: T.sans,
+              fontSize:   '14px',
               lineHeight: 1.65,
-              color:      T.text,
-              letterSpacing: '0.01em',
+              color:      T.textMuted,
             }}
           >
             {step.explanation}
@@ -298,97 +407,62 @@ export function StepPanel({
         </AnimatePresence>
       </div>
 
-      <ScanLine />
-
-      {/* ── Metrics row ──────────────────────────────────────── */}
-      <div style={{
-        display:  'flex',
-        flexWrap: 'wrap',
-        gap:      '2px',
-        padding:  '10px 14px',
-      }}>
-        {/* MST weight — always shown */}
-        <DataField
-          label="MST Weight"
-          value={metrics.mstWeight.toFixed(1)}
-          accent="cyan"
-        />
-
-        {/* Tour length — when available */}
-        {metrics.tourLength !== null && (
-          <DataField
-            label="Tour Length"
-            value={metrics.tourLength.toFixed(1)}
-            accent="cyan"
-            glow={true}
-          />
-        )}
-
-        {/* Approximation ratio — when available */}
-        {metrics.ratio !== null && (
-          <DataField
-            label="Ratio"
-            value={metrics.ratio.toFixed(3)}
-            unit="×"
-            accent={ratioAccent}
-            glow={true}
-          />
-        )}
-
-        {/* Optimal comparison — when computed */}
-        {optimal !== null && (
-          <DataField
-            label="Optimal"
-            value={optimal.length.toFixed(1)}
-            accent="cyan"
-          />
-        )}
-
-        {/* Delta from optimal */}
-        {optimalDelta !== null && (
-          <DataField
-            label="vs Optimal"
-            value={`+${optimalDelta.toFixed(1)}`}
-            unit="%"
-            accent={optimalDelta > 50 ? 'amber' : 'cyan'}
-            glow={true}
-          />
-        )}
+      {/* ── Current step metric ───────────────────────────────── */}
+      <div style={{ padding: '16px 18px', borderBottom: `1px solid ${T.panelBorder}`, minHeight: '72px' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`metric-${step.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isFinalStep && metrics.tourLength !== null ? (
+              <FinalSummary
+                tourLength={metrics.tourLength}
+                mstWeight={metrics.mstWeight}
+                ratio={metrics.ratio}
+                optimal={optimal}
+                onCompare={onCompareOptimal}
+                canCompare={canCompareOptimal}
+              />
+            ) : (
+              <CurrentMetric
+                stepId={step.id}
+                currentWeight={metrics.currentWeight}
+                oddVertexCount={oddVertexCount}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* ── Controls row (toggle + compare) — always visible ── */}
-      <>
-        <ScanLine />
-        <div style={{
-          display:    'flex',
-          flexWrap:   'wrap',
-          alignItems: 'center',
-          gap:        '16px',
-          padding:    '10px 14px',
-        }}>
-          {/* Shortcut toggle — dimmed but visible on non-shortcut steps */}
-          <div style={{
-            opacity:    showShortcut ? 1 : 0.28,
-            transition: 'opacity 0.3s ease',
-            pointerEvents: showShortcut ? 'auto' : 'none',
-          }}>
-            <ShortcutToggle
-              value={useImprovedShortcut}
-              onChange={onToggleShortcut}
+      {/* ── Shortcut toggle (steps 6–7) ───────────────────────── */}
+      <div style={{
+        padding:    '14px 18px',
+        opacity:    showShortcut ? 1 : 0.3,
+        transition: 'opacity 0.3s ease',
+        pointerEvents: showShortcut ? 'auto' : 'none',
+      }}>
+        <ShortcutToggle
+          value={useImprovedShortcut}
+          onChange={onToggleShortcut}
+        />
+      </div>
+
+      {/* Compare to optimal — shown on non-final steps, below shortcut */}
+      {!isFinalStep && (
+        <>
+          <Divider />
+          <div style={{ padding: '14px 18px' }}>
+            <CompareButton
+              onClick={onCompareOptimal}
+              enabled={canCompareOptimal}
+              hasResult={optimal !== null}
             />
           </div>
-
-          {/* Spacer */}
-          <div style={{ flex: 1 }} />
-
-          {/* Compare to optimal button */}
-          <CompareButton
-            onClick={onCompareOptimal}
-            enabled={canCompareOptimal}
-            hasResult={optimal !== null}
-          />
-        </div>
-      </>
+        </>
+      )}
     </div>
   );
 }

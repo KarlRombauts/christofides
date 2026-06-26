@@ -18,7 +18,6 @@ const DEFAULT_VERTEX_COUNT = 7;
 const INITIAL_VERTS = circularLayout(DEFAULT_VERTEX_COUNT, CANVAS_W, CANVAS_H);
 
 // ─── SVG coordinate conversion ────────────────────────────────────────────────
-// Converts a pointer event's client coords into SVG viewBox coords.
 function svgCoordsOf(
   e: { clientX: number; clientY: number },
   svg: SVGSVGElement,
@@ -52,17 +51,14 @@ export default function App() {
   );
 
   // ── Drag / hover state ───────────────────────────────────────────────────────
-  // Which vertex is being dragged (null = none).
   const draggingId = useRef<number | null>(null);
-  // Which vertex the pointer is hovering (for Backspace-delete).
   const hoveredId = useRef<number | null>(null);
 
   // ── Keyboard delete ──────────────────────────────────────────────────────────
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Backspace' && hoveredId.current !== null) {
-        e.preventDefault(); // stop Backspace from triggering browser back-navigation
-        // Guard: never go below 3 vertices — the tour steps require at least 3
+        e.preventDefault();
         if (verts.length > 3) {
           deleteVertex(hoveredId.current);
           hoveredId.current = null;
@@ -77,10 +73,8 @@ export default function App() {
   // ── Pointer callbacks ────────────────────────────────────────────────────────
   const onVertexPointerDown = useCallback(
     (id: number, e: PointerEvent<SVGCircleElement>) => {
-      // Prevent the SVG background handler from firing
       e.stopPropagation();
       draggingId.current = id;
-      // Capture pointer so pointermove fires even if cursor leaves the circle
       (e.currentTarget as SVGCircleElement).setPointerCapture(e.pointerId);
     },
     [],
@@ -93,7 +87,6 @@ export default function App() {
     [],
   );
 
-  // SVG-level pointer events (wired through GraphCanvas _onSvg* props)
   const onSvgPointerMove = useCallback(
     (e: PointerEvent<SVGSVGElement>) => {
       if (draggingId.current === null) return;
@@ -119,7 +112,6 @@ export default function App() {
 
   const onBackgroundPointerDown = useCallback(
     (e: PointerEvent<SVGSVGElement>) => {
-      // Ignore if a drag is in progress (vertex consumed the event via stopPropagation)
       if (draggingId.current !== null) return;
       const coords = svgCoordsOf(e, e.currentTarget as SVGSVGElement);
       addVertex(coords.x, coords.y);
@@ -144,7 +136,6 @@ export default function App() {
       stopPlay();
       return;
     }
-    // If already at last step, wrap to start
     if (stepIndex >= STEPS.length - 1) {
       setStepIndex(0);
     }
@@ -153,7 +144,6 @@ export default function App() {
       setStepIndex((prev) => {
         const next = prev + 1;
         if (next >= STEPS.length - 1) {
-          // Stop after landing on the last step
           setTimeout(stopPlay, 0);
           return STEPS.length - 1;
         }
@@ -162,7 +152,6 @@ export default function App() {
     }, 1500);
   }, [playing, stepIndex, stopPlay]);
 
-  // Clean up interval on unmount
   useEffect(() => {
     return () => {
       if (intervalRef.current !== null) clearInterval(intervalRef.current);
@@ -210,11 +199,12 @@ export default function App() {
     if (res) setOptimal({ length: res.length });
   }, [verts, graph, canCompareOptimal]);
 
-  // ── Algorithm result → canvas props ──────────────────────────────────────────
+  // ── Canvas props ──────────────────────────────────────────────────────────────
   const highlightEdges = result.edges;
   const highlightVertices = result.vertices;
-  // On step 2 (odd-degree vertices), also pass them as pulseVertices
   const pulseVertices = stepIndex === 2 ? result.vertices : [];
+  // For step 2: pass the count of odd-degree vertices
+  const oddVertexCount = stepIndex === 2 ? result.vertices.length : 0;
 
   // ─── Responsive breakpoint ────────────────────────────────────────────────────
   const [isWide, setIsWide] = useState(() =>
@@ -237,9 +227,8 @@ export default function App() {
         display:       'flex',
         flexDirection: 'column',
         alignItems:    'center',
-        padding:       isWide ? '28px 24px 32px' : '16px 12px 24px',
+        padding:       isWide ? '36px 24px 40px' : '20px 14px 28px',
         boxSizing:     'border-box',
-        fontFamily:    T.mono,
       }}
     >
       {/* ── Header ──────────────────────────────────────────────── */}
@@ -247,51 +236,36 @@ export default function App() {
         style={{
           width:         '100%',
           maxWidth:      '1020px',
-          marginBottom:  isWide ? '20px' : '14px',
-          display:       'flex',
-          flexWrap:      'wrap',
-          alignItems:    'baseline',
-          gap:           '14px',
+          marginBottom:  isWide ? '28px' : '18px',
+          paddingBottom: isWide ? '20px' : '14px',
           borderBottom:  `1px solid ${T.panelBorder}`,
-          paddingBottom: isWide ? '14px' : '10px',
         }}
       >
-        <div
+        <h1
           style={{
-            fontFamily:    T.mono,
-            fontSize:      isWide ? '11px' : '9px',
-            fontWeight:    700,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            color:         T.cyan,
-            textShadow:    `0 0 18px ${T.cyanGlow}`,
+            fontFamily:    T.serif,
+            fontSize:      isWide ? '26px' : '20px',
+            fontWeight:    600,
+            color:         T.text,
+            margin:        0,
+            letterSpacing: '-0.01em',
+            lineHeight:    1.2,
           }}
         >
-          Christofides
-        </div>
-        <div
+          Christofides Algorithm
+        </h1>
+        <p
           style={{
-            fontFamily:    T.mono,
-            fontSize:      isWide ? '10px' : '8px',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color:         T.label,
+            fontFamily: T.sans,
+            fontSize:   isWide ? '14px' : '13px',
+            color:      T.textMuted,
+            margin:     '4px 0 0 0',
+            lineHeight: 1.4,
           }}
         >
-          1.5-Approximation Algorithm · Interactive Explainer
-        </div>
-        <div style={{ flex: 1 }} />
-        <div
-          style={{
-            fontFamily:    T.mono,
-            fontSize:      '9px',
-            letterSpacing: '0.1em',
-            color:         T.textFaint,
-            whiteSpace:    'nowrap',
-          }}
-        >
-          Click canvas to add · Drag to move · Hover + ⌫ to delete
-        </div>
+          An interactive walkthrough of the 1.5-approximation algorithm for the
+          Travelling Salesman Problem.
+        </p>
       </header>
 
       {/* ── Main content: graph + panel side-by-side (wide) or stacked ── */}
@@ -301,24 +275,13 @@ export default function App() {
           maxWidth:      '1020px',
           display:       'flex',
           flexDirection: isWide ? 'row' : 'column',
-          gap:           '16px',
+          gap:           '20px',
           alignItems:    isWide ? 'flex-start' : 'stretch',
           marginBottom:  '16px',
         }}
       >
-        {/* ── Graph canvas ───────────────────────────────────────── */}
-        <div style={{ flexShrink: 0, position: 'relative' }}>
-          {/* Subtle CRT scanline overlay */}
-          <div
-            style={{
-              position:        'absolute',
-              inset:           0,
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.055) 2px, rgba(0,0,0,0.055) 4px)',
-              pointerEvents:   'none',
-              zIndex:          2,
-              borderRadius:    '4px',
-            }}
-          />
+        {/* ── Graph canvas + hint caption ────────────────────── */}
+        <div style={{ flexShrink: 0 }}>
           <GraphCanvas
             verts={verts}
             baseEdges={graph.edges}
@@ -334,6 +297,19 @@ export default function App() {
             _onSvgPointerUp={onSvgPointerUp}
             _onSvgPointerLeave={onSvgPointerLeave}
           />
+          {/* Canvas interaction hints — placed directly below the canvas */}
+          <p
+            style={{
+              fontFamily: T.mono,
+              fontSize:   '11px',
+              color:      T.textFaint,
+              marginTop:  '8px',
+              lineHeight: 1.5,
+              letterSpacing: '0.01em',
+            }}
+          >
+            Click canvas to add a node · Drag to move · Hover + ⌫ to delete
+          </p>
         </div>
 
         {/* ── Step panel ─────────────────────────────────────────── */}
@@ -346,6 +322,7 @@ export default function App() {
             onToggleShortcut={setUseImprovedShortcut}
             onCompareOptimal={onCompareOptimal}
             canCompareOptimal={canCompareOptimal}
+            oddVertexCount={oddVertexCount}
           />
         </div>
       </div>

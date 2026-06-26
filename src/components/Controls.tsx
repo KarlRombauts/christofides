@@ -14,82 +14,71 @@ export interface ControlsProps {
   onVertexCount: (n: number) => void;
 }
 
-// ─── Button variants ──────────────────────────────────────────────────────────
+const MIN_VERTS = 4;
+const MAX_VERTS = 12;
 
-type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'play';
+// ─── Base button component ────────────────────────────────────────────────────
 
 interface BtnProps {
-  label:     string;
+  label:     React.ReactNode;
   onClick:   () => void;
   disabled?: boolean;
-  variant?:  BtnVariant;
-  wide?:     boolean;
+  variant?:  'primary' | 'secondary' | 'ghost';
   title?:    string;
+  wide?:     boolean;
 }
 
-function ConsoleBtn({ label, onClick, disabled = false, variant = 'secondary', wide = false, title }: BtnProps) {
-  const isPrimary   = variant === 'primary';
-  const isPlay      = variant === 'play';
-  const isGhost     = variant === 'ghost';
+function Btn({ label, onClick, disabled = false, variant = 'secondary', title, wide }: BtnProps) {
+  const isPrimary = variant === 'primary';
+  const isGhost   = variant === 'ghost';
 
   const base: React.CSSProperties = {
     fontFamily:    T.mono,
-    fontSize:      '10px',
-    fontWeight:    600,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    padding:       isPlay ? '8px 20px' : '7px 12px',
-    minWidth:      wide ? '88px' : isPlay ? '72px' : '52px',
-    border:        '1px solid',
-    borderColor:   disabled
-      ? T.textFaint
-      : isPrimary || isPlay
-        ? T.cyan
-        : isGhost
-          ? T.textFaint
-          : T.muted,
-    borderRadius:  '2px',
+    fontSize:      '12px',
+    fontWeight:    isPrimary ? 600 : 500,
+    letterSpacing: '0.06em',
+    padding:       isPrimary ? '9px 20px' : '8px 14px',
+    minWidth:      wide ? '80px' : undefined,
+    border:        `1px solid ${disabled ? T.panelBorder : isPrimary ? T.accent : T.panelBorder}`,
+    borderRadius:  '4px',
     background:    disabled
       ? 'transparent'
-      : isPrimary || isPlay
-        ? T.cyanFaint
+      : isPrimary
+        ? T.accent
         : 'transparent',
     color:         disabled
       ? T.textFaint
-      : isPrimary || isPlay
-        ? T.cyan
+      : isPrimary
+        ? '#FFFFFF'
         : isGhost
-          ? T.label
-          : T.label,
+          ? T.textMuted
+          : T.text,
     cursor:        disabled ? 'not-allowed' : 'pointer',
-    boxShadow:     !disabled && (isPrimary || isPlay)
-      ? `0 0 10px ${T.cyanGlow}`
-      : 'none',
     transition:    'all 0.15s ease',
     userSelect:    'none',
     flexShrink:    0,
+    lineHeight:    1,
   };
 
   function handleEnter(e: React.MouseEvent<HTMLButtonElement>) {
     if (disabled) return;
-    const el = e.currentTarget;
-    if (isPrimary || isPlay) {
-      el.style.background = T.cyanGlow;
-      el.style.boxShadow  = `0 0 18px ${T.cyanGlow}`;
+    const el = e.currentTarget as HTMLButtonElement;
+    if (isPrimary) {
+      el.style.background = T.accentDim;
     } else {
-      el.style.borderColor = T.cyan;
-      el.style.color       = T.cyan;
+      el.style.borderColor = T.textMuted;
+      el.style.color = T.text;
     }
   }
+
   function handleLeave(e: React.MouseEvent<HTMLButtonElement>) {
     if (disabled) return;
-    const el = e.currentTarget;
-    if (isPrimary || isPlay) {
-      el.style.background = T.cyanFaint;
-      el.style.boxShadow  = `0 0 10px ${T.cyanGlow}`;
+    const el = e.currentTarget as HTMLButtonElement;
+    if (isPrimary) {
+      el.style.background = T.accent;
     } else {
-      el.style.borderColor = isGhost ? T.textFaint : T.muted;
-      el.style.color       = T.label;
+      el.style.borderColor = T.panelBorder;
+      el.style.color = isGhost ? T.textMuted : T.text;
     }
   }
 
@@ -107,189 +96,152 @@ function ConsoleBtn({ label, onClick, disabled = false, variant = 'secondary', w
   );
 }
 
-// ─── Vertex slider ────────────────────────────────────────────────────────────
+// ─── Node count stepper ───────────────────────────────────────────────────────
 
-function VertexSlider({
+function NodeStepper({
   value,
   onChange,
 }: {
   value:    number;
   onChange: (n: number) => void;
 }) {
-  const MIN = 4;
-  const MAX = 12;
-  const pct = ((value - MIN) / (MAX - MIN)) * 100;
-
   return (
     <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      gap:           '6px',
-      flex:          1,
-      minWidth:      '120px',
+      display:    'flex',
+      alignItems: 'center',
+      gap:        '10px',
     }}>
-      {/* Label row */}
-      <div style={{
-        display:        'flex',
-        justifyContent: 'space-between',
-        alignItems:     'baseline',
+      <span style={{
+        fontFamily:    T.mono,
+        fontSize:      '12px',
+        color:         T.textMuted,
+        fontWeight:    500,
+        letterSpacing: '0.04em',
       }}>
-        <span style={{
-          fontFamily:    T.mono,
-          fontSize:      '9px',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color:         T.label,
-        }}>
-          Vertices
-        </span>
+        Nodes
+      </span>
+      <div style={{
+        display:      'flex',
+        alignItems:   'center',
+        border:       `1px solid ${T.panelBorder}`,
+        borderRadius: '4px',
+        overflow:     'hidden',
+      }}>
+        <button
+          onClick={() => onChange(Math.max(MIN_VERTS, value - 1))}
+          disabled={value <= MIN_VERTS}
+          title="Fewer nodes"
+          aria-label="Decrease node count"
+          style={{
+            fontFamily:  T.mono,
+            fontSize:    '16px',
+            lineHeight:  1,
+            padding:     '5px 10px',
+            border:      'none',
+            borderRight: `1px solid ${T.panelBorder}`,
+            background:  'transparent',
+            color:       value <= MIN_VERTS ? T.textFaint : T.text,
+            cursor:      value <= MIN_VERTS ? 'not-allowed' : 'pointer',
+          }}
+        >
+          −
+        </button>
         <span style={{
           fontFamily:  T.mono,
-          fontSize:    '13px',
+          fontSize:    '14px',
           fontWeight:  600,
-          color:       T.cyan,
-          letterSpacing: '0.04em',
-          textShadow:  `0 0 8px ${T.cyanGlow}`,
+          color:       T.text,
+          padding:     '5px 12px',
+          minWidth:    '36px',
+          textAlign:   'center',
+          userSelect:  'none',
         }}>
           {value}
         </span>
-      </div>
-
-      {/* Track */}
-      <div
-        style={{
-          position:     'relative',
-          height:       '3px',
-          background:   T.muted,
-          borderRadius: '2px',
-          cursor:       'pointer',
-        }}
-      >
-        {/* Fill */}
-        <div style={{
-          position:     'absolute',
-          left:         0,
-          top:          0,
-          height:       '100%',
-          width:        `${pct}%`,
-          background:   T.cyan,
-          borderRadius: '2px',
-          boxShadow:    `0 0 6px ${T.cyanGlow}`,
-          transition:   'width 0.1s ease',
-        }} />
-
-        {/* Native input (invisible, overlays for a11y) */}
-        <input
-          type="range"
-          min={MIN}
-          max={MAX}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
+        <button
+          onClick={() => onChange(Math.min(MAX_VERTS, value + 1))}
+          disabled={value >= MAX_VERTS}
+          title="More nodes"
+          aria-label="Increase node count"
           style={{
-            position:   'absolute',
-            inset:      '-8px 0',
-            width:      '100%',
-            opacity:    0,
-            cursor:     'pointer',
-            margin:     0,
+            fontFamily:  T.mono,
+            fontSize:    '16px',
+            lineHeight:  1,
+            padding:     '5px 10px',
+            border:      'none',
+            borderLeft:  `1px solid ${T.panelBorder}`,
+            background:  'transparent',
+            color:       value >= MAX_VERTS ? T.textFaint : T.text,
+            cursor:      value >= MAX_VERTS ? 'not-allowed' : 'pointer',
           }}
-          aria-label="Number of vertices"
-        />
-
-        {/* Thumb */}
-        <div style={{
-          position:      'absolute',
-          left:          `calc(${pct}% - 5px)`,
-          top:           '50%',
-          transform:     'translateY(-50%)',
-          width:         '10px',
-          height:        '10px',
-          borderRadius:  '2px',
-          background:    T.cyan,
-          border:        `2px solid #001820`,
-          boxShadow:     `0 0 8px ${T.cyanGlow}`,
-          pointerEvents: 'none',
-          transition:    'left 0.1s ease',
-        }} />
+        >
+          +
+        </button>
       </div>
-
-      {/* Min/Max labels */}
-      <div style={{
-        display:        'flex',
-        justifyContent: 'space-between',
+      <span style={{
+        fontFamily: T.mono,
+        fontSize:   '11px',
+        color:      T.textFaint,
       }}>
-        <span style={{ fontFamily: T.mono, fontSize: '8px', color: T.textFaint }}>{MIN}</span>
-        <span style={{ fontFamily: T.mono, fontSize: '8px', color: T.textFaint }}>{MAX}</span>
-      </div>
+        {MIN_VERTS}–{MAX_VERTS}
+      </span>
     </div>
   );
 }
 
-// ─── Step progress indicator ──────────────────────────────────────────────────
+// ─── Step progress (dots + "Step N of M" label) ───────────────────────────────
 
 function StepProgress({ current, total }: { current: number; total: number }) {
   return (
     <div style={{
-      display:       'flex',
-      flexDirection: 'column',
-      gap:           '5px',
-      minWidth:      '80px',
+      display:    'flex',
+      alignItems: 'center',
+      gap:        '10px',
     }}>
-      <div style={{
-        display:        'flex',
-        justifyContent: 'space-between',
-        alignItems:     'baseline',
-      }}>
-        <span style={{
-          fontFamily:    T.mono,
-          fontSize:      '9px',
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color:         T.label,
-        }}>
-          Progress
-        </span>
-        <span style={{
-          fontFamily:  T.mono,
-          fontSize:    '10px',
-          color:       T.cyan,
-          letterSpacing: '0.06em',
-        }}>
-          {current + 1}/{total}
-        </span>
-      </div>
-      <div style={{
-        display: 'flex',
-        gap:     '3px',
-      }}>
+      {/* Dot timeline */}
+      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
         {Array.from({ length: total }, (_, i) => (
           <div
             key={i}
             style={{
-              flex:         1,
-              height:       '3px',
-              borderRadius: '1px',
-              background:   i <= current ? T.cyan : T.muted,
-              boxShadow:    i === current ? `0 0 6px ${T.cyanGlow}` : 'none',
-              transition:   'background 0.2s ease, box-shadow 0.2s ease',
+              width:        i === current ? '18px' : '6px',
+              height:       '6px',
+              borderRadius: '3px',
+              background:   i <= current ? T.accent : T.panelBorder,
+              transition:   'all 0.2s ease',
             }}
           />
         ))}
       </div>
+      {/* Text counter */}
+      <span style={{
+        fontFamily:    T.mono,
+        fontSize:      '12px',
+        color:         T.textMuted,
+        letterSpacing: '0.04em',
+        whiteSpace:    'nowrap',
+      }}>
+        Step {current + 1} of {total}
+      </span>
     </div>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Vertical divider ─────────────────────────────────────────────────────────
 
-function ScanLine() {
+function VDivider() {
   return (
     <div style={{
-      height:     '1px',
-      background: `linear-gradient(90deg, transparent 0%, #0d2030 20%, #2a4460 50%, #0d2030 80%, transparent 100%)`,
+      width:      '1px',
+      alignSelf:  'stretch',
+      background: T.panelBorder,
+      flexShrink: 0,
+      margin:     '0 4px',
     }} />
   );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export function Controls({
   stepIndex,
@@ -312,93 +264,96 @@ export function Controls({
       flexDirection: 'column',
       background:    T.panel,
       border:        `1px solid ${T.panelBorder}`,
-      borderRadius:  '4px',
+      borderRadius:  '6px',
       overflow:      'hidden',
-      fontFamily:    T.mono,
     }}>
 
-      {/* ── Navigation row ───────────────────────────────────── */}
+      {/* ── Row 1: Playback + step progress ──────────────────── */}
       <div style={{
-        display:     'flex',
-        alignItems:  'center',
-        gap:         '8px',
-        padding:     '10px 14px',
-        flexWrap:    'wrap',
+        display:    'flex',
+        alignItems: 'center',
+        gap:        '8px',
+        padding:    '12px 18px',
+        flexWrap:   'wrap',
+        borderBottom: `1px solid ${T.panelBorder}`,
       }}>
+        {/* Playback group label */}
+        <span style={{
+          fontFamily:    T.mono,
+          fontSize:      '10px',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase' as const,
+          color:         T.textFaint,
+          marginRight:   '4px',
+        }}>
+          Playback
+        </span>
 
-        {/* Prev / Next / Play cluster */}
+        {/* Prev / Play / Next / Reset */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <ConsoleBtn
-            label="◀ Prev"
+          <Btn
+            label="← Prev"
             onClick={onPrev}
             disabled={atStart || playing}
             title="Previous step"
           />
-          <ConsoleBtn
+          <Btn
             label={playing ? '⏸ Pause' : '▶ Play'}
             onClick={onTogglePlay}
-            variant="play"
-            title={playing ? 'Pause auto-play' : 'Auto-play steps'}
+            variant="primary"
+            title={playing ? 'Pause auto-play' : 'Auto-play all steps'}
           />
-          <ConsoleBtn
-            label="Next ▶"
+          <Btn
+            label="Next →"
             onClick={onNext}
             disabled={atEnd || playing}
             title="Next step"
           />
-        </div>
-
-        {/* Divider */}
-        <div style={{
-          width:      '1px',
-          height:     '28px',
-          background: T.panelBorder,
-          flexShrink: 0,
-          margin:     '0 2px',
-        }} />
-
-        {/* Reset / Randomize */}
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <ConsoleBtn
+          <Btn
             label="↺ Reset"
             onClick={onReset}
             variant="ghost"
-            title="Reset to step 0"
-          />
-          <ConsoleBtn
-            label="⊞ Random"
-            onClick={onRandomize}
-            variant="ghost"
-            title="Generate random graph"
+            title="Return to step 1"
           />
         </div>
+
+        <VDivider />
+
+        {/* Step progress indicator — right next to playback */}
+        <StepProgress current={stepIndex} total={numSteps} />
       </div>
 
-      <ScanLine />
-
-      {/* ── Slider + progress row ────────────────────────────── */}
+      {/* ── Row 2: Graph settings ─────────────────────────────── */}
       <div style={{
         display:    'flex',
-        alignItems: 'flex-start',
-        gap:        '20px',
-        padding:    '10px 14px',
+        alignItems: 'center',
+        gap:        '16px',
+        padding:    '12px 18px',
         flexWrap:   'wrap',
       }}>
-        <VertexSlider
+        {/* Graph settings label */}
+        <span style={{
+          fontFamily:    T.mono,
+          fontSize:      '10px',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase' as const,
+          color:         T.textFaint,
+        }}>
+          Graph
+        </span>
+
+        {/* Node count stepper */}
+        <NodeStepper
           value={vertexCount}
           onChange={onVertexCount}
         />
 
-        <div style={{
-          width:      '1px',
-          alignSelf:  'stretch',
-          background: T.panelBorder,
-          flexShrink: 0,
-        }} />
-
-        <StepProgress
-          current={stepIndex}
-          total={numSteps}
+        {/* Randomize — with graph settings, NOT with reset */}
+        <Btn
+          label="Randomize"
+          onClick={onRandomize}
+          variant="ghost"
+          title="Generate a new random graph with the current node count"
         />
       </div>
     </div>

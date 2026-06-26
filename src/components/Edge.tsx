@@ -1,4 +1,9 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { T } from '../theme';
+
+// Hit-area width for hover detection (invisible wider transparent stroke)
+const HIT_AREA = 12;
 
 interface EdgeProps {
   x1: number;
@@ -6,72 +11,139 @@ interface EdgeProps {
   x2: number;
   y2: number;
   highlight?: boolean;
-  /** Unique key string for AnimatePresence (passed externally, not used here) */
-  filterId?: string;
+  /** Edge weight to show on hover */
+  weight?: number;
+  /** When true, the base edge fades further (a highlight is active in the scene) */
+  dimmed?: boolean;
+  filterId?: string; // kept for API compat, not used
 }
 
-// Design: "Graph Paper Noir"
-// Muted edges are dark slate whispers; highlight edges are electric cyan with layered glow.
-// Two motion.line layers for highlight: a diffuse glow beneath + a crisp signal line on top.
+const transition = { type: 'tween', duration: 0.25, ease: 'easeInOut' } as const;
 
-const MUTED_COLOR = '#1e3048';
-const MUTED_OPACITY = 0.55;
-const MUTED_WIDTH = 1;
+export function Edge({ x1, y1, x2, y2, highlight = false, weight, dimmed = false, filterId: _filterId }: EdgeProps) {
+  const [hovered, setHovered] = useState(false);
 
-const GLOW_COLOR = '#00e5ff';
-const GLOW_OPACITY = 0.18;
-const GLOW_WIDTH = 6;
+  // Midpoint for the weight label
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
 
-const SIGNAL_COLOR = '#00e5ff';
-const SIGNAL_OPACITY = 1;
-const SIGNAL_WIDTH = 1.5;
-
-const transition = { type: 'tween', duration: 0.35, ease: 'easeInOut' } as const;
-
-export function Edge({ x1, y1, x2, y2, highlight = false, filterId }: EdgeProps) {
   if (highlight) {
     return (
       <g>
-        {/* Diffuse glow layer */}
+        {/* Hit area */}
+        <line
+          x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke="transparent"
+          strokeWidth={HIT_AREA}
+          strokeLinecap="round"
+          style={{ cursor: 'crosshair' }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        />
+        {/* Visible highlight edge */}
         <motion.line
           x1={x1} y1={y1} x2={x2} y2={y2}
           initial={false}
           animate={{
-            stroke: GLOW_COLOR,
-            strokeOpacity: GLOW_OPACITY,
-            strokeWidth: GLOW_WIDTH,
+            stroke: hovered ? T.accentDim : T.edgeHighlight,
+            strokeOpacity: 1,
+            strokeWidth: hovered ? 3 : 2.5,
           }}
           transition={transition}
           strokeLinecap="round"
-          filter={filterId ? `url(#${filterId})` : undefined}
+          style={{ pointerEvents: 'none' }}
         />
-        {/* Crisp signal line */}
-        <motion.line
-          x1={x1} y1={y1} x2={x2} y2={y2}
-          initial={false}
-          animate={{
-            stroke: SIGNAL_COLOR,
-            strokeOpacity: SIGNAL_OPACITY,
-            strokeWidth: SIGNAL_WIDTH,
-          }}
-          transition={transition}
-          strokeLinecap="round"
-        />
+        {/* Weight label on hover */}
+        {hovered && weight !== undefined && (
+          <g style={{ pointerEvents: 'none' }}>
+            <rect
+              x={mx - 16}
+              y={my - 10}
+              width={32}
+              height={18}
+              rx={3}
+              fill={T.panel}
+              stroke={T.panelBorder}
+              strokeWidth={1}
+            />
+            <text
+              x={mx}
+              y={my + 4}
+              textAnchor="middle"
+              style={{
+                fontSize: '10px',
+                fontFamily: T.mono,
+                fontWeight: 600,
+                fill: T.accent,
+                userSelect: 'none',
+              }}
+            >
+              {Math.round(weight)}
+            </text>
+          </g>
+        )}
       </g>
     );
   }
 
+  // Base (non-highlighted) edge — plain static lines for performance.
+  // Uses motion only for opacity transition when dimmed state changes.
+  const opacity = dimmed ? 0.3 : 0.55;
+
   return (
-    <motion.line
-      x1={x1} y1={y1} x2={x2} y2={y2}
-      initial={false}
-      animate={{
-        stroke: MUTED_COLOR,
-        strokeOpacity: MUTED_OPACITY,
-        strokeWidth: MUTED_WIDTH,
-      }}
-      transition={transition}
-      strokeLinecap="round"
-    />
+    <g>
+      {/* Hit area for hover */}
+      <line
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke="transparent"
+        strokeWidth={HIT_AREA}
+        strokeLinecap="round"
+        style={{ cursor: 'crosshair' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      />
+      {/* Visible base edge */}
+      <motion.line
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        initial={false}
+        animate={{
+          stroke: hovered ? T.textMuted : T.edgeBase,
+          strokeOpacity: hovered ? 0.8 : opacity,
+          strokeWidth: hovered ? 1.5 : 1,
+        }}
+        transition={transition}
+        strokeLinecap="round"
+        style={{ pointerEvents: 'none' }}
+      />
+      {/* Weight label on hover */}
+      {hovered && weight !== undefined && (
+        <g style={{ pointerEvents: 'none' }}>
+          <rect
+            x={mx - 16}
+            y={my - 10}
+            width={32}
+            height={18}
+            rx={3}
+            fill={T.panel}
+            stroke={T.panelBorder}
+            strokeWidth={1}
+          />
+          <text
+            x={mx}
+            y={my + 4}
+            textAnchor="middle"
+            style={{
+              fontSize: '10px',
+              fontFamily: T.mono,
+              fontWeight: 600,
+              fill: T.text,
+              userSelect: 'none',
+            }}
+          >
+            {Math.round(weight)}
+          </text>
+        </g>
+      )}
+    </g>
   );
 }
