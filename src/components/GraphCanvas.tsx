@@ -146,40 +146,30 @@ export function GraphCanvas({
       </g>
 
       {/* Highlight edges — terracotta accent, rendered on top.
-          When idle, AnimatePresence cross-fades them on enter/exit. During a
-          drag the MST/tour is recomputed every frame, so we drop the fade and
-          render them as plain lines that snap instantly with the dragged node. */}
+          Always wrapped in AnimatePresence so the structure never changes
+          between drag and rest (a structural swap on drag-release would remount
+          everything and fade it back in). Instead the transition is made
+          instant WHILE dragging — so edges snap live with the node and don't
+          fade on release — and returns to a 0.25s cross-fade for step changes. */}
       <g role="group" aria-label="highlight edges">
-        {dragging ? (
-          highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
-            <Edge
+        <AnimatePresence>
+          {highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
+            <motion.g
               key={key}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              highlight={true}
-              weight={weight}
-              dragging={true}
-            />
-          ))
-        ) : (
-          <AnimatePresence>
-            {highlightEdgeData.map(({ key, x1, y1, x2, y2, weight }) => (
-              <motion.g
-                key={key}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25 }}
-              >
-                <Edge
-                  x1={x1} y1={y1} x2={x2} y2={y2}
-                  highlight={true}
-                  weight={weight}
-                  dragging={false}
-                />
-              </motion.g>
-            ))}
-          </AnimatePresence>
-        )}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: dragging ? 0 : 0.25 }}
+            >
+              <Edge
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                highlight={true}
+                weight={weight}
+                dragging={dragging}
+              />
+            </motion.g>
+          ))}
+        </AnimatePresence>
       </g>
 
       {/* Vertices — rendered last, sit on top of all edges.
